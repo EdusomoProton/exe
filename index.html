@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" sizes="512x512" href="favicon.png">
+    <title>App de Exercícios</title>
+    <style>
+        body {
+            font-family: 'TwitterChirp', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            background-color: #fff;
+            color: #000;
+        }
+        header {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            border-bottom: 1px solid #ddd;
+            background: #fff;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1DA1F2;
+        }
+        .search {
+            flex: 1;
+            margin: 0 20px;
+        }
+        .search input {
+            width: 100%;
+            padding: 8px;
+            border-radius: 20px;
+            border: 1px solid #ddd;
+            background: #fff;
+            color: #000;
+        }
+        .layout {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+        .left-sidebar {
+            width: 250px;
+            padding: 20px;
+            border-right: 1px solid #ddd;
+            background: #f8f9fa;
+        }
+        .left-sidebar nav button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: none;
+            border: none;
+            color: #000;
+            text-align: left;
+            border-radius: 10px;
+            font-size: 18px;
+        }
+        .left-sidebar nav button:hover {
+            background: #e9ecef;
+        }
+        .left-sidebar nav button.active {
+            background: #1DA1F2;
+            color: #fff;
+        }
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #fff;
+        }
+        .compose {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .compose button {
+            background: #1DA1F2;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-right: 20px;
+        }
+        .compose button:hover {
+            background: #1991DB;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+        .controls select {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            background: #fff;
+            color: #000;
+        }
+        .feed .tweet {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #fff;
+            position: relative;
+        }
+        .tweet-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .tweet-header .difficulty {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            margin-right: 10px;
+        }
+        .easy { background: green; color: #fff; }
+        .medium { background: orange; color: #fff; }
+        .hard { background: red; color: #fff; }
+        .tweet-header .category {
+            color: #1DA1F2;
+            margin-right: 10px;
+        }
+        .tweet-header .favorite-btn {
+            background: none;
+            border: none;
+            font-size: 30px;
+            cursor: pointer;
+            color: #ffd700;
+            margin-left: auto;
+        }
+        .tweet-header .favorite-btn:hover {
+            color: #ffed4e;
+        }
+        .tweet-content h4 {
+            margin: 0 0 10px 0;
+            color: #000;
+        }
+        .tweet-content img {
+            max-width: 100%;
+            height: auto;
+            margin: 10px 0;
+            border-radius: 10px;
+        }
+        .tweet-content p {
+            margin: 10px 0;
+            color: #000;
+        }
+        .tweet-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .tweet-actions button {
+            background: none;
+            border: 1px solid #ddd;
+            color: #000;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .tweet-actions button:hover {
+            background: #f8f9fa;
+        }
+        .feito-btn {
+            background: #dc3545;
+            color: #fff;
+        }
+        .feito-btn.done {
+            background: #28a745;
+            color: #fff;
+        }
+        .feito-btn.done:hover {
+            background: #33623e;
+            color: #fff;
+        }
+        .annotation-btn.has-annotations {
+            background: #ffc107;
+            color: #000;
+        }
+        .responder-btn, .limpar-btn {
+            background: none;
+            border: 1px solid #ddd;
+            color: #000;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .responder-btn:hover, .limpar-btn:hover {
+            background: #f8f9fa;
+        }
+        .answer-accordion {
+            margin-top: 10px;
+        }
+        .accordion-toggle {
+            background: #1DA1F2;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .accordion-toggle:hover {
+            background: #1991DB;
+        }
+        .accordion-content {
+            margin-top: 10px;
+        }
+        .accordion-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fff;
+            color: #000;
+            padding: 20px;
+            border: 1px solid #ddd;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 10px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 101;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: #000;
+        }
+        .modal-content label {
+            display: block;
+            margin-top: 10px;
+            color: #000;
+        }
+        .modal-content input, .modal-content textarea, .modal-content select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #fff;
+            color: #000;
+        }
+        .modal-content button {
+            margin-top: 10px;
+            padding: 10px 15px;
+            background: #1DA1F2;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .modal-content button:hover {
+            background: #1991DB;
+        }
+        .alternative-input {
+            display: flex;
+            align-items: center;
+            margin-top: 5px;
+        }
+        .alternative-input input {
+            flex: 1;
+            margin-right: 10px;
+        }
+        .remove-alt {
+            background: #dc3545;
+            color: #fff;
+            border: none;
+            padding: 2px 5px;
+            cursor: pointer;
+        }
+        .alt-text.rasurada {
+            text-decoration: line-through;
+            color: gray;
+        }
+        .rasurar-btn {
+            margin-right: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0;
+        }
+        .rasurar-btn:hover {
+            background: rgba(255, 107, 107, 0.2);
+            border-radius: 4px;
+        }
+        .alt-label input {
+            vertical-align: middle;
+        }
+        .alt-label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .alt-text {
+            margin-right: 10px;
+        }
+        .tags {
+            margin-top: 5px;
+            font-size: 12px;
+            color: #666;
+        }
+        .tag {
+            display: inline-block;
+            background: #e9ecef;
+            padding: 2px 6px;
+            margin-right: 5px;
+            border-radius: 4px;
+            color: #000;
+        }
+        .hidden {
+            display: none;
+        }
+        .dropdown-menu {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 100;
+            padding: 5px;
+        }
+        .dropdown-menu button {
+            display: block;
+            width: 100%;
+            margin: 2px 0;
+            background: none;
+            border: none;
+            color: #000;
+            text-align: left;
+        }
+        .dropdown-menu button:hover {
+            background: #f8f9fa;
+        }
+        .menu-container {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+        }
+        .menu-btn {
+            background: #fff;
+            border: 1px solid #ddd;
+            color: #000;
+            padding: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .stats-section {
+            margin-top: 30px;
+        }
+        .stats-section h2 {
+            text-align: center;
+            color: #1DA1F2;
+        }
+        .stats-section #addStatsBtn {
+            margin-bottom: 20px;
+            background: #1DA1F2;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .stats-entry {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            background: #fff;
+        }
+        .stats-entry h3 {
+            color: #1DA1F2;
+        }
+        .stats-entry p {
+            margin: 5px 0;
+            color: #000;
+        }
+        .stats-entry button {
+            margin-right: 10px;
+            background: #6c757d;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .stats-entry button:hover {
+            background: #5a6268;
+        }
+        .simulado-section {
+            margin-top: 30px;
+        }
+        .simulado-section h2 {
+            text-align: center;
+            color: #1DA1F2;
+        }
+        .simulado-section #submitSimulado {
+            margin-bottom: 20px;
+            background: #1DA1F2;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .simulado-question {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            background: #fff;
+        }
+    </style>
+</head>
+<body>
+<header>
+  <div class="logo"><img src="favicon.png" alt="Logo" style="height: 24px; margin-right: 10px;">App de Exercícios</div>
+  <div class="search">
+    <input type="text" id="searchInput" class="search-input" placeholder="Buscar por categoria ou #tag (ex: #Modelo AK, Microeconomia)">
+  </div>
+  <div class="user-menu">
+    <!-- User menu placeholder -->
+  </div>
+</header>
+<div class="layout">
+  <aside class="left-sidebar">
+    <nav>
+      <button class="category-btn active" data-category="Todos">Todos</button>
+      <button class="category-btn" data-category="Matemática">Matemática</button>
+      <button class="category-btn" data-category="Microeconomia">Microeconomia</button>
+      <button class="category-btn" data-category="Macroeconomia">Macroeconomia</button>
+      <button class="category-btn" data-category="Estatística">Estatística</button>
+      <br><br>
+      <button class="stats-btn" id="statsBtn">Stats</button>
+      <br><br>
+      <button class="simulado-btn" id="simuladoBtn">Simulado</button>
+    </nav>
+  </aside>
+  <main class="main-content">
+    <div class="compose">
+      <button class="new-exercise-btn" id="newExerciseBtn">Novo Exercício</button>
+      <div class="controls">
+        <select id="sortSelect" class="sort-select">
+          <option value="recent">Mais recentes</option>
+          <option value="oldest">Mais antigas</option>
+          <option value="easy-first">Mais fáceis</option>
+          <option value="hard-first">Mais difíceis</option>
+        </select>
+        <select id="statusSelect" class="status-select">
+          <option value="all">Todos</option>
+          <option value="done">Feitos</option>
+          <option value="not-done">Não Feitos</option>
+          <option value="favorites">Favoritos</option>
+        </select>
+      </div>
+    </div>
+    <div class="feed" id="exerciseList">
+      <!-- Exercises will be displayed here -->
+    </div>
+    <div class="stats-section" id="statsSection" style="display: none;">
+      <h2>Estatísticas</h2>
+      <button id="addStatsBtn">Adicionar Estatísticas</button>
+      <div id="statsList"></div>
+    </div>
+    <div class="simulado-section" id="simuladoSection" style="display: none;">
+      <h2>Simulado Aleatório</h2>
+      <div id="simuladoList"></div>
+      <button id="submitSimulado" style="display: none;">Enviar Simulado</button>
+    </div>
+  </main>
+</div>
+
+<!-- Modal for annotations -->
+<div id="annotationModal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="closeModal">&times;</span>
+    <h2>Anotações</h2>
+    <textarea id="annotationText" rows="10" placeholder="Digite suas anotações aqui..."></textarea>
+    <button id="saveAnnotation">Salvar Anotação</button>
+  </div>
+</div>
+
+<!-- Modal for editing -->
+<div id="editModal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="closeEditModal">&times;</span>
+    <h2>Editar Exercício</h2>
+    <label for="editTitle">Título do Exercício:</label>
+    <input type="text" id="editTitle">
+
+    <label for="editDifficulty">Dificuldade:</label>
+    <select id="editDifficulty">
+      <option value="easy">Fácil</option>
+      <option value="medium">Médio</option>
+      <option value="hard">Difícil</option>
+    </select>
+
+    <label for="editCategory">Categoria:</label>
+    <select id="editCategory">
+      <option value="Matemática">Matemática</option>
+      <option value="Microeconomia">Microeconomia</option>
+      <option value="Macroeconomia">Macroeconomia</option>
+      <option value="Estatística">Estatística</option>
+    </select>
+
+    <label for="editImage">Upload da Foto (opcional):</label>
+    <input type="file" id="editImage" accept="image/*">
+
+    <label for="editExerciseText">Texto do Exercício (opcional):</label>
+    <textarea id="editExerciseText" rows="5"></textarea>
+
+    <label for="editAnswerImage">Imagem da Resposta (opcional):</label>
+    <input type="file" id="editAnswerImage" accept="image/*">
+
+    <label for="editTags">Etiquetas (opcional, use # para hashtags, separadas por vírgula):</label>
+    <input type="text" id="editTags" placeholder="#Tag1, #Tag2">
+
+    <label>Alternativas (opcional):</label>
+    <div id="editAlternativesContainer"></div>
+    <button type="button" id="editAddAlternative">Adicionar Alternativa</button>
+
+    <label for="editCorrectAlt">Alternativa Correta:</label>
+    <select id="editCorrectAlt">
+      <option value="">Selecione</option>
+    </select>
+
+    <button id="saveEdit">Salvar Edição</button>
+  </div>
+</div>
+
+<!-- Modal for new exercise -->
+<div id="newModal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="closeNewModal">&times;</span>
+    <h2>Novo Exercício</h2>
+    <form id="exerciseForm">
+      <label for="title">Título do Exercício:</label>
+      <input type="text" id="title" required>
+
+      <label for="difficulty">Dificuldade:</label>
+      <select id="difficulty" required>
+        <option value="">Selecione</option>
+        <option value="easy">Fácil</option>
+        <option value="medium">Médio</option>
+        <option value="hard">Difícil</option>
+      </select>
+
+      <label for="category">Categoria:</label>
+      <select id="category" required>
+        <option value="">Selecione</option>
+        <option value="Matemática">Matemática</option>
+        <option value="Microeconomia">Microeconomia</option>
+        <option value="Macroeconomia">Macroeconomia</option>
+        <option value="Estatística">Estatística</option>
+      </select>
+
+      <label for="image">Upload da Foto (opcional, ou cole com Ctrl+V):</label>
+      <input type="file" id="image" accept="image/*">
+
+      <label for="exerciseText">Texto do Exercício (opcional, use HTML para hyperlinks):</label>
+      <textarea id="exerciseText" rows="5"></textarea>
+
+      <label for="answerImage">Imagem da Resposta (opcional):</label>
+      <input type="file" id="answerImage" accept="image/*">
+
+      <label for="tags">Etiquetas (opcional, use # para hashtags, separadas por vírgula, ex: #Teorias do Crescimento, #Modelo AK):</label>
+      <input type="text" id="tags" placeholder="#Tag1, #Tag2">
+
+      <label>Alternativas (opcional):</label>
+      <div id="alternativesContainer"></div>
+      <button type="button" id="addAlternative">Adicionar Alternativa</button>
+
+      <label for="correctAlt">Alternativa Correta:</label>
+      <select id="correctAlt">
+        <option value="">Selecione</option>
+      </select>
+
+      <button type="submit" id="submitBtn">Salvar Exercício</button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal for stats -->
+<div id="statsModal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="closeStatsModal">&times;</span>
+    <h2>Estatísticas Diárias</h2>
+    <label for="statsDate">Data:</label>
+    <input type="date" id="statsDate">
+
+    <label for="statsDone">Questões Feitas:</label>
+    <input type="number" id="statsDone" min="0">
+
+    <label for="statsCorrect">Acertos:</label>
+    <input type="number" id="statsCorrect" min="0">
+
+    <label for="statsWrong">Erros:</label>
+    <input type="number" id="statsWrong" min="0">
+
+    <label for="statsGoal">Meta:</label>
+    <input type="number" id="statsGoal" min="0">
+
+    <button id="saveStats">Salvar Estatísticas</button>
+  </div>
+</div>
+
+<script>
+        let exercises = JSON.parse(localStorage.getItem('exercises')) || [];
+        let stats = JSON.parse(localStorage.getItem('stats')) || {};
+        exercises.forEach(ex => {
+            if (!ex.createdAt) ex.createdAt = ex.updatedAt || new Date().toISOString();
+            if (!ex.category) ex.category = 'Matemática';
+            if (ex.alternatives && ex.alternatives.length > 0 && ex.correctIndex === undefined) {
+                ex.correctIndex = 0;
+            }
+            if (!ex.done) ex.done = false;
+            if (!ex.favorite) ex.favorite = false;
+        });
+        let currentAnnotationIndex = null;
+        let editingIndex = null;
+        let currentCategory = 'Todos';
+        let searchTerm = '';
+        let sortOrder = 'recent';
+        let currentStatus = 'all';
+        let currentView = 'exercises';
+
+        function openModal(modal) {
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModalWindow(modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        const form = document.getElementById('exerciseForm');
+        const exerciseList = document.getElementById('exerciseList');
+        const modal = document.getElementById('annotationModal');
+        const closeModal = document.getElementById('closeModal');
+        const saveAnnotation = document.getElementById('saveAnnotation');
+        const annotationText = document.getElementById('annotationText');
+        const addAlternativeBtn = document.getElementById('addAlternative');
+        const alternativesContainer = document.getElementById('alternativesContainer');
+        const submitBtn = document.getElementById('submitBtn');
+        const editModal = document.getElementById('editModal');
+        const closeEditModal = document.getElementById('closeEditModal');
+        const saveEdit = document.getElementById('saveEdit');
+        const editAddAlternativeBtn = document.getElementById('editAddAlternative');
+        const editAlternativesContainer = document.getElementById('editAlternativesContainer');
+        const newModal = document.getElementById('newModal');
+        const closeNewModal = document.getElementById('closeNewModal');
+        const newExerciseBtn = document.getElementById('newExerciseBtn');
+        const searchInput = document.getElementById('searchInput');
+        const sortSelect = document.getElementById('sortSelect');
+        const statusSelect = document.getElementById('statusSelect');
+        const statsBtn = document.getElementById('statsBtn');
+        const statsModal = document.getElementById('statsModal');
+        const closeStatsModal = document.getElementById('closeStatsModal');
+        const saveStats = document.getElementById('saveStats');
+        const statsSection = document.getElementById('statsSection');
+        const statsList = document.getElementById('statsList');
+        const addStatsBtn = document.getElementById('addStatsBtn');
+        const simuladoBtn = document.getElementById('simuladoBtn');
+        const simuladoSection = document.getElementById('simuladoSection');
+        const simuladoList = document.getElementById('simuladoList');
+        const submitSimulado = document.getElementById('submitSimulado');
+
+        addAlternativeBtn.addEventListener('click', addAlternativeInput);
+        editAddAlternativeBtn.addEventListener('click', addEditAlternativeInput);
+        newExerciseBtn.addEventListener('click', () => openModal(newModal));
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('statsBtn').classList.remove('active');
+                currentCategory = btn.dataset.category;
+                showExercises();
+            });
+        });
+
+        searchInput.addEventListener('input', () => {
+            searchTerm = searchInput.value.trim().toLowerCase();
+            showExercises();
+        });
+
+        sortSelect.addEventListener('change', () => {
+            sortOrder = sortSelect.value;
+            showExercises();
+        });
+
+        statusSelect.addEventListener('change', () => {
+            currentStatus = statusSelect.value;
+            showExercises();
+        });
+
+        statsBtn.addEventListener('click', () => {
+            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+            showStats();
+        });
+
+        addStatsBtn.addEventListener('click', openStatsModal);
+
+        simuladoBtn.addEventListener('click', () => {
+            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('statsBtn').classList.remove('active');
+            simuladoBtn.classList.add('active');
+            showSimulado();
+        });
+
+        addAlternativeBtn.addEventListener('click', addAlternativeInput);
+
+        function addAlternativeInput(value = '') {
+            const div = document.createElement('div');
+            div.className = 'alternative-input';
+            div.innerHTML = `
+                <input type="text" value="${value}" placeholder="Digite a alternativa">
+                <button type="button" class="remove-alt">Remover</button>
+            `;
+            div.querySelector('.remove-alt').addEventListener('click', () => {
+                div.remove();
+                updateCorrectAltOptions();
+            });
+            alternativesContainer.appendChild(div);
+            updateCorrectAltOptions();
+        }
+
+        function updateCorrectAltOptions() {
+            const select = document.getElementById('correctAlt');
+            const currentValue = select.value;
+            select.innerHTML = '<option value="">Selecione</option>';
+            const inputs = alternativesContainer.querySelectorAll('input');
+            inputs.forEach((input, index) => {
+                if (input.value.trim()) {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = input.value.trim();
+                    select.appendChild(option);
+                }
+            });
+            if (currentValue && select.querySelector(`option[value="${currentValue}"]`)) {
+                select.value = currentValue;
+            }
+        }
+
+        function addEditAlternativeInput(value = '') {
+            const div = document.createElement('div');
+            div.className = 'alternative-input';
+            div.innerHTML = `
+                <input type="text" value="${value}" placeholder="Digite a alternativa">
+                <button type="button" class="remove-alt">Remover</button>
+            `;
+            div.querySelector('.remove-alt').addEventListener('click', () => {
+                div.remove();
+                updateEditCorrectAltOptions();
+            });
+            editAlternativesContainer.appendChild(div);
+            updateEditCorrectAltOptions();
+        }
+
+        function updateEditCorrectAltOptions() {
+            const select = document.getElementById('editCorrectAlt');
+            const currentValue = select.value;
+            select.innerHTML = '<option value="">Selecione</option>';
+            const inputs = editAlternativesContainer.querySelectorAll('input');
+            inputs.forEach((input, index) => {
+                if (input.value.trim()) {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = input.value.trim();
+                    select.appendChild(option);
+                }
+            });
+            if (currentValue && select.querySelector(`option[value="${currentValue}"]`)) {
+                select.value = currentValue;
+            }
+        }
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const title = document.getElementById('title').value;
+            const difficulty = document.getElementById('difficulty').value;
+            const category = document.getElementById('category').value;
+            const imageInput = document.getElementById('image');
+            const answerImageInput = document.getElementById('answerImage');
+            const exerciseText = document.getElementById('exerciseText').value;
+            const tagsInput = document.getElementById('tags').value;
+            const tags = tagsInput ? tagsInput.split(',').map(tag => tag.trim()).filter(tag => tag.startsWith('#')) : [];
+            const alternatives = Array.from(alternativesContainer.querySelectorAll('input')).map(input => input.value.trim()).filter(val => val);
+            const correctIndex = alternatives.length > 0 ? parseInt(document.getElementById('correctAlt').value) || 0 : null;
+
+            // Validation
+            if (!title || !difficulty || !category) {
+                alert('Título, dificuldade e categoria são obrigatórios.');
+                return;
+            }
+
+            let imageData = null;
+            let answerImageData = null;
+            let filesToRead = 0;
+            if (imageInput.files[0]) filesToRead++;
+            if (answerImageInput.files[0]) filesToRead++;
+
+            if (filesToRead === 0) {
+                saveExercise(title, difficulty, category, imageData, exerciseText, answerImageData, alternatives, correctIndex, tags);
+            } else {
+                if (imageInput.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        imageData = event.target.result;
+                        filesToRead--;
+                        if (filesToRead === 0) saveExercise(title, difficulty, category, imageData, exerciseText, answerImageData, alternatives, correctIndex, tags);
+                    };
+                    reader.readAsDataURL(imageInput.files[0]);
+                }
+                if (answerImageInput.files[0]) {
+                    const reader2 = new FileReader();
+                    reader2.onload = function(event) {
+                        answerImageData = event.target.result;
+                        filesToRead--;
+                        if (filesToRead === 0) saveExercise(title, difficulty, category, imageData, exerciseText, answerImageData, alternatives, correctIndex, tags);
+                    };
+                    reader2.readAsDataURL(answerImageInput.files[0]);
+                }
+            }
+        });
+
+        function saveExercise(title, difficulty, category, imageData, exerciseText, answerImageData, alternatives, correctIndex, tags = []) {
+            const now = new Date().toISOString();
+            const exercise = {
+                title,
+                difficulty,
+                category,
+                image: imageData,
+                text: exerciseText,
+                answerImage: answerImageData,
+                alternatives,
+                correctIndex,
+                annotations: '',
+                tags,
+                done: false,
+                favorite: false,
+                createdAt: now,
+                updatedAt: now
+            };
+            exercises.push(exercise);
+            localStorage.setItem('exercises', JSON.stringify(exercises));
+            displayExercises();
+            form.reset();
+            alternativesContainer.innerHTML = '';
+            updateCorrectAltOptions();
+            closeModalWindow(newModal);
+        }
+
+        function displayExercises() {
+            if (currentView !== 'exercises') return;
+            if (sortOrder === 'recent') {
+                exercises.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            } else if (sortOrder === 'oldest') {
+                exercises.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+            } else if (sortOrder === 'easy-first') {
+                const diffOrder = { easy: 1, medium: 2, hard: 3 };
+                exercises.sort((a, b) => diffOrder[a.difficulty] - diffOrder[b.difficulty]);
+            } else if (sortOrder === 'hard-first') {
+                const diffOrder = { easy: 1, medium: 2, hard: 3 };
+                exercises.sort((a, b) => diffOrder[b.difficulty] - diffOrder[a.difficulty]);
+            }
+            exerciseList.innerHTML = '';
+            exercises.forEach((exercise, index) => {
+                if (currentCategory !== 'Todos' && exercise.category !== currentCategory) return;
+                if (currentStatus === 'done' && !exercise.done) return;
+                if (currentStatus === 'not-done' && exercise.done) return;
+                if (currentStatus === 'favorites' && !exercise.favorite) return;
+                if (searchTerm) {
+                    const searchTerms = searchTerm.split(',').map(t => t.trim()).filter(t => t);
+                    const matches = searchTerms.some(term => {
+                        const matchesTag = exercise.tags && exercise.tags.some(tag => tag.toLowerCase().includes(term));
+                        const matchesCategory = exercise.category.toLowerCase().includes(term);
+                        const matchesTitle = exercise.title.toLowerCase().includes(term);
+                        const matchesText = exercise.text.toLowerCase().includes(term);
+                        return matchesTag || matchesCategory || matchesTitle || matchesText;
+                    });
+                    if (!matches) return;
+                }
+                const tagsHtml = exercise.tags && exercise.tags.length > 0 ? '<div class="tags">' + exercise.tags.map(tag => `<span class="tag">${tag}</span>`).join('') + '</div>' : '';
+                const exerciseDiv = document.createElement('div');
+                exerciseDiv.className = 'tweet';
+                exerciseDiv.innerHTML = `
+                    <div class="tweet-header">
+                        <span class="difficulty ${exercise.difficulty}">${exercise.difficulty === 'easy' ? 'Fácil' : exercise.difficulty === 'medium' ? 'Médio' : 'Difícil'}</span>
+                        <span class="category">${exercise.category}</span>
+                        <button class="favorite-btn" onclick="toggleFavorite(${index})">${exercise.favorite ? '★' : '☆'}</button>
+                    </div>
+                    <div class="tweet-content">
+                        <h4>${exercise.title}</h4>
+                        ${tagsHtml}
+                        ${exercise.image ? `<img src="${exercise.image}" alt="Exercício">` : ''}
+                        <p>${exercise.text}</p>
+                        ${exercise.alternatives.length > 0 ? '<h5>Alternativas:</h5><form class="alt-form">' + exercise.alternatives.map((alt, i) => `<label class="alt-label"><button type="button" class="rasurar-btn" data-alt-index="${i}">✂️</button> <span class="alt-text">${alt}</span> <input type="radio" name="alt${index}" value="${i}"></label><br>`).join('') + '</form><button class="responder-btn" data-index="' + index + '">Responder</button> <button class="limpar-btn" data-index="' + index + '">Limpar</button>' : ''}
+                        <div class="answer-accordion ${exercise.alternatives.length === 0 ? '' : 'hidden'}" id="accordion-${index}">
+                            <button class="accordion-toggle">Mostrar Resposta</button>
+                            <div class="accordion-content hidden">
+                                ${exercise.answerImage ? `<img src="${exercise.answerImage}" alt="Resposta">` : '<p>Sem imagem de resposta.</p>'}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="menu-container"><button class="menu-btn" onclick="toggleMenu(${index})">⋮</button><div class="dropdown-menu hidden" id="menu-${index}"><button class="edit-btn" onclick="editExercise(${index})">Editar</button><br><button class="delete-btn" onclick="deleteExercise(${index})">Excluir</button><br><button class="info-btn" onclick="showInfo(${index})">Info.</button></div></div>
+                    <div class="tweet-actions">
+                        <button class="feito-btn ${exercise.done ? 'done' : ''}" onclick="toggleDone(${index})">Feito</button>
+                        <button class="annotation-btn ${exercise.annotations ? 'has-annotations' : ''}" onclick="openAnnotationModal(${index})">Anotações</button>
+                    </div>
+                `;
+                exerciseList.appendChild(exerciseDiv);
+                // Add listeners for buttons
+                const responderBtn = exerciseDiv.querySelector('.responder-btn');
+                const limparBtn = exerciseDiv.querySelector('.limpar-btn');
+                if (responderBtn) {
+                    responderBtn.addEventListener('click', () => {
+                        const altForm = exerciseDiv.querySelector('.alt-form');
+                        const selected = altForm.querySelector('input:checked');
+                        if (selected) {
+                            const selectedIndex = parseInt(selected.value);
+                            const labels = altForm.querySelectorAll('label');
+                            labels.forEach((label, i) => {
+                                if (i === exercise.correctIndex) {
+                                    label.style.color = 'green';
+                                    label.style.fontWeight = 'bold';
+                                } else if (i === selectedIndex) {
+                                    label.style.color = 'red';
+                                } else {
+                                    label.style.color = '';
+                                }
+                            });
+                            // Show accordion after answering
+                            const accordion = exerciseDiv.querySelector(`#accordion-${index}`);
+                            if (accordion) accordion.classList.remove('hidden');
+                        }
+                    });
+                }
+                if (limparBtn) {
+                    limparBtn.addEventListener('click', () => {
+                        const altForm = exerciseDiv.querySelector('.alt-form');
+                        const radios = altForm.querySelectorAll('input[type="radio"]');
+                        radios.forEach(radio => radio.checked = false);
+                        const labels = altForm.querySelectorAll('label');
+                        labels.forEach(label => {
+                            label.style.color = '';
+                            label.style.fontWeight = '';
+                        });
+                        const altTexts = altForm.querySelectorAll('.alt-text');
+                        altTexts.forEach(text => text.classList.remove('rasurada'));
+                        radios.forEach(radio => radio.disabled = false);
+                        // Hide accordion on clear
+                        const accordion = exerciseDiv.querySelector(`#accordion-${index}`);
+                        if (accordion) accordion.classList.add('hidden');
+                    });
+                }
+                // Rasurar buttons
+                const rasurarBtns = exerciseDiv.querySelectorAll('.rasurar-btn');
+                rasurarBtns.forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const altIndex = parseInt(btn.dataset.altIndex);
+                        const label = btn.closest('.alt-label');
+                        const altText = label.querySelector('.alt-text');
+                        altText.classList.toggle('rasurada');
+                        const radio = label.querySelector('input[type="radio"]');
+                        radio.disabled = !radio.disabled;
+                    });
+                });
+                // Accordion toggle
+                const accordionToggle = exerciseDiv.querySelector('.accordion-toggle');
+                if (accordionToggle) {
+                    accordionToggle.addEventListener('click', () => {
+                        const content = accordionToggle.nextElementSibling;
+                        content.classList.toggle('hidden');
+                    });
+                }
+            });
+        }
+
+        function editExercise(index) {
+            const exercise = exercises[index];
+            document.getElementById('editTitle').value = exercise.title;
+            document.getElementById('editDifficulty').value = exercise.difficulty;
+            document.getElementById('editCategory').value = exercise.category;
+            document.getElementById('editExerciseText').value = exercise.text;
+            document.getElementById('editTags').value = exercise.tags ? exercise.tags.join(', ') : '';
+            editAlternativesContainer.innerHTML = '';
+            exercise.alternatives.forEach(alt => addEditAlternativeInput(alt));
+            document.getElementById('editCorrectAlt').value = exercise.correctIndex || 0;
+            editingIndex = index;
+            openModal(editModal);
+        }
+
+        function deleteExercise(index) {
+            if (confirm('Tem certeza que deseja excluir este exercício?')) {
+                exercises.splice(index, 1);
+                localStorage.setItem('exercises', JSON.stringify(exercises));
+                displayExercises();
+            }
+        }
+
+        function showInfo(index) {
+            const ex = exercises[index];
+            alert(`Criado: ${new Date(ex.createdAt).toLocaleString()}\nAtualizado: ${new Date(ex.updatedAt).toLocaleString()}`);
+        }
+
+        function openAnnotationModal(index) {
+            currentAnnotationIndex = index;
+            annotationText.value = exercises[index].annotations;
+            openModal(modal);
+        }
+
+        function toggleMenu(index) {
+            const menu = document.getElementById(`menu-${index}`);
+            const menuBtn = menu.previousElementSibling;
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                const hideMenu = (e) => {
+                    if (!menu.contains(e.target) && e.target !== menuBtn) {
+                        menu.classList.add('hidden');
+                        document.removeEventListener('click', hideMenu);
+                    }
+                };
+                setTimeout(() => document.addEventListener('click', hideMenu), 0);
+            } else {
+                menu.classList.add('hidden');
+            }
+        }
+
+        function toggleFavorite(index) {
+            exercises[index].favorite = !exercises[index].favorite;
+            localStorage.setItem('exercises', JSON.stringify(exercises));
+            displayExercises();
+        }
+
+        function toggleDone(index) {
+            exercises[index].done = !exercises[index].done;
+            exercises[index].updatedAt = new Date().toISOString();
+            localStorage.setItem('exercises', JSON.stringify(exercises));
+            displayExercises();
+        }
+
+        function openStatsModal() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('statsDate').value = today;
+            const dayStats = stats[today] || { done: 0, correct: 0, wrong: 0, goal: 0 };
+            document.getElementById('statsDone').value = dayStats.done;
+            document.getElementById('statsCorrect').value = dayStats.correct;
+            document.getElementById('statsWrong').value = dayStats.wrong;
+            document.getElementById('statsGoal').value = dayStats.goal;
+            openModal(statsModal);
+        }
+
+        function showExercises() {
+            currentView = 'exercises';
+            exerciseList.style.display = 'block';
+            statsSection.style.display = 'none';
+            simuladoSection.style.display = 'none';
+            document.getElementById('statsBtn').classList.remove('active');
+            simuladoBtn.classList.remove('active');
+            displayExercises();
+        }
+
+        function showStats() {
+            currentView = 'stats';
+            exerciseList.style.display = 'none';
+            statsSection.style.display = 'block';
+            simuladoSection.style.display = 'none';
+            document.getElementById('statsBtn').classList.add('active');
+            simuladoBtn.classList.remove('active');
+            displayStats();
+        }
+
+        function displayStats() {
+            statsList.innerHTML = '';
+            const sortedDates = Object.keys(stats).sort((a, b) => new Date(b) - new Date(a));
+            sortedDates.forEach(date => {
+                const dayStats = stats[date];
+                const [year, month, day] = date.split('-');
+                const formattedDate = `${day}/${month}/${year}`;
+                const div = document.createElement('div');
+                div.className = 'stats-entry';
+                div.innerHTML = `
+                    <h3>${formattedDate}</h3>
+                    <p>Questões Feitas: ${dayStats.done}</p>
+                    <p>Acertos: ${dayStats.correct}</p>
+                    <p>Erros: ${dayStats.wrong}</p>
+                    <p>Meta: ${dayStats.goal}</p>
+                    <button onclick="editStats('${date}')">Editar</button>
+                    <button onclick="deleteStats('${date}')">Excluir</button>
+                `;
+                statsList.appendChild(div);
+            });
+        }
+
+        function showSimulado() {
+            currentView = 'simulado';
+            exerciseList.style.display = 'none';
+            statsSection.style.display = 'none';
+            simuladoSection.style.display = 'block';
+            generateSimulado();
+        }
+
+        function generateSimulado() {
+            const eligible = exercises.filter(ex => ex.alternatives && ex.alternatives.length > 0);
+            if (eligible.length < 10) {
+                alert('Não há questões suficientes com alternativas para gerar um simulado de 10 questões.');
+                return;
+            }
+            const shuffled = eligible.sort(() => 0.5 - Math.random());
+            const selected = shuffled.slice(0, 10);
+            window.selectedExercises = selected;
+            simuladoList.innerHTML = '';
+            selected.forEach((ex, i) => {
+                const div = document.createElement('div');
+                div.className = 'simulado-question';
+                div.innerHTML = `
+                    <h4>${i+1}. ${ex.title}</h4>
+                    ${ex.tags ? '<div class="tags">' + ex.tags.map(tag => `<span class="tag">${tag}</span>`).join('') + '</div>' : ''}
+                    ${ex.image ? `<img src="${ex.image}" alt="Exercício">` : ''}
+                    <p>${ex.text}</p>
+                    <form class="alt-form">
+                        ${ex.alternatives.map((alt, j) => `<label class="alt-label"><input type="radio" name="q${i}" value="${j}"> ${alt}</label><br>`).join('')}
+                    </form>
+                `;
+                simuladoList.appendChild(div);
+            });
+            submitSimulado.style.display = 'block';
+        }
+
+        function deleteStats(date) {
+            if (confirm('Tem certeza que deseja excluir as estatísticas desta data?')) {
+                delete stats[date];
+                localStorage.setItem('stats', JSON.stringify(stats));
+                displayStats();
+            }
+        }
+
+        function editStats(date) {
+            document.getElementById('statsDate').value = date;
+            const dayStats = stats[date];
+            document.getElementById('statsDone').value = dayStats.done;
+            document.getElementById('statsCorrect').value = dayStats.correct;
+            document.getElementById('statsWrong').value = dayStats.wrong;
+            document.getElementById('statsGoal').value = dayStats.goal;
+            statsModal.style.display = 'block';
+        }
+
+        closeModal.onclick = () => closeModalWindow(modal);
+
+        closeNewModal.onclick = () => closeModalWindow(newModal);
+
+        closeEditModal.onclick = () => closeModalWindow(editModal);
+
+        closeStatsModal.onclick = () => closeModalWindow(statsModal);
+
+        saveAnnotation.onclick = function() {
+            exercises[currentAnnotationIndex].annotations = annotationText.value;
+            exercises[currentAnnotationIndex].updatedAt = new Date().toISOString();
+            localStorage.setItem('exercises', JSON.stringify(exercises));
+            displayExercises();
+            closeModalWindow(modal);
+        };
+
+        closeStatsModal.onclick = function() {
+            statsModal.style.display = 'none';
+        };
+
+        saveStats.onclick = function() {
+            const date = document.getElementById('statsDate').value;
+            const done = parseInt(document.getElementById('statsDone').value) || 0;
+            const correct = parseInt(document.getElementById('statsCorrect').value) || 0;
+            const wrong = parseInt(document.getElementById('statsWrong').value) || 0;
+            const goal = parseInt(document.getElementById('statsGoal').value) || 0;
+            stats[date] = { done, correct, wrong, goal };
+            localStorage.setItem('stats', JSON.stringify(stats));
+            if (currentView === 'stats') displayStats();
+            closeModalWindow(statsModal);
+        };
+
+        submitSimulado.onclick = function() {
+            const questions = simuladoList.querySelectorAll('.simulado-question');
+            let correct = 0;
+            questions.forEach((q, i) => {
+                const selected = q.querySelector('input:checked');
+                if (selected && parseInt(selected.value) === window.selectedExercises[i].correctIndex) {
+                    correct++;
+                }
+            });
+            alert(`Você acertou ${correct} de ${questions.length} questões.`);
+            showExercises();
+        };
+
+        saveEdit.onclick = function() {
+            const title = document.getElementById('editTitle').value;
+            const difficulty = document.getElementById('editDifficulty').value;
+            const category = document.getElementById('editCategory').value;
+            const imageInput = document.getElementById('editImage');
+            const editAnswerImageInput = document.getElementById('editAnswerImage');
+            const exerciseText = document.getElementById('editExerciseText').value;
+            const tagsInput = document.getElementById('editTags').value;
+            const tags = tagsInput ? tagsInput.split(',').map(tag => tag.trim()).filter(tag => tag.startsWith('#')) : [];
+            const alternatives = Array.from(editAlternativesContainer.querySelectorAll('input')).map(input => input.value.trim()).filter(val => val);
+            const correctIndex = alternatives.length > 0 ? parseInt(document.getElementById('editCorrectAlt').value) || 0 : null;
+
+            if (!title || !difficulty || !category) {
+                alert('Título, dificuldade e categoria são obrigatórios.');
+                return;
+            }
+
+            let imageData = exercises[editingIndex].image;
+            let answerImageData = exercises[editingIndex].answerImage;
+            let filesToRead = 0;
+            if (imageInput.files[0]) filesToRead++;
+            if (editAnswerImageInput.files[0]) filesToRead++;
+
+            if (filesToRead === 0) {
+                saveEditExercise(title, difficulty, category, imageData, exerciseText, answerImageData, alternatives, correctIndex, tags);
+            } else {
+                if (imageInput.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        imageData = event.target.result;
+                        filesToRead--;
+                        if (filesToRead === 0) saveEditExercise(title, difficulty, category, imageData, exerciseText, answerImageData, alternatives, correctIndex, tags);
+                    };
+                    reader.readAsDataURL(imageInput.files[0]);
+                }
+                if (editAnswerImageInput.files[0]) {
+                    const reader2 = new FileReader();
+                    reader2.onload = function(event) {
+                        answerImageData = event.target.result;
+                        filesToRead--;
+                        if (filesToRead === 0) saveEditExercise(title, difficulty, category, imageData, exerciseText, answerImageData, alternatives, correctIndex, tags);
+                    };
+                    reader2.readAsDataURL(editAnswerImageInput.files[0]);
+                }
+            }
+        };
+
+        function saveEditExercise(title, difficulty, category, imageData, exerciseText, answerImageData, alternatives, correctIndex, tags = []) {
+            exercises[editingIndex] = {
+                title,
+                difficulty,
+                category,
+                image: imageData,
+                text: exerciseText,
+                answerImage: answerImageData,
+                alternatives,
+                correctIndex,
+                annotations: exercises[editingIndex].annotations,
+                tags,
+                done: exercises[editingIndex].done,
+                favorite: exercises[editingIndex].favorite,
+                createdAt: exercises[editingIndex].createdAt,
+                updatedAt: new Date().toISOString()
+            };
+            editingIndex = null;
+            localStorage.setItem('exercises', JSON.stringify(exercises));
+            displayExercises();
+            closeModalWindow(editModal);
+        };
+
+        // Paste image
+        document.getElementById('image').addEventListener('paste', handlePaste);
+        document.getElementById('editImage').addEventListener('paste', handlePaste);
+        document.getElementById('answerImage').addEventListener('paste', handlePaste);
+        document.getElementById('editAnswerImage').addEventListener('paste', handlePaste);
+
+        function handlePaste(e) {
+            const items = e.clipboardData.items;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    e.preventDefault();
+                    const file = items[i].getAsFile();
+                    const dt = new DataTransfer();
+                    dt.items.add(file);
+                    e.target.files = dt.files;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
