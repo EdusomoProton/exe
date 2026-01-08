@@ -439,6 +439,99 @@
             border-radius: 10px;
             background: #fff;
         }
+        .timer-section {
+            background: #f0f8ff;
+            border: 1px solid #1DA1F2;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+        }
+        .timer-display {
+            font-size: 32px;
+            font-weight: bold;
+            color: #1DA1F2;
+            text-align: center;
+            margin: 10px 0;
+        }
+        .timer-controls {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+        .timer-btn {
+            background: #1DA1F2;
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .timer-btn:hover {
+            background: #1991DB;
+        }
+        .timer-btn.pause {
+            background: #ffc107;
+            color: #000;
+        }
+        .timer-btn.pause:hover {
+            background: #ffb300;
+        }
+        .timer-btn.reset {
+            background: #dc3545;
+        }
+        .timer-btn.reset:hover {
+            background: #c82333;
+        }
+        .timer-btn.complete {
+            background: #28a745;
+        }
+        .timer-btn.complete:hover {
+            background: #218838;
+        }
+        .timer-history {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        .timer-history h5 {
+            margin: 0 0 8px 0;
+            color: #1DA1F2;
+            font-size: 14px;
+        }
+        .history-entry {
+            font-size: 12px;
+            color: #666;
+            padding: 4px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .history-entry:last-child {
+            border-bottom: none;
+        }
+        .history-entry span {
+            font-weight: bold;
+            color: #000;
+        }
+        .delete-time-btn {
+            background: #dc3545;
+            color: #fff;
+            border: none;
+            padding: 2px 6px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        .delete-time-btn:hover {
+            background: #c82333;
+        }
     </style>
 </head>
 <body>
@@ -538,7 +631,7 @@
     <label for="editExerciseText">Texto do Exercício (opcional):</label>
     <textarea id="editExerciseText" rows="5"></textarea>
 
-    <label for="editAnswerImage">Imagem da Resposta (opcional):</label>
+    <label for="editAnswerImage">Imagem da Resolução (opcional):</label>
     <input type="file" id="editAnswerImage" accept="image/*">
 
     <label for="editTags">Etiquetas (opcional, use # para hashtags, separadas por vírgula):</label>
@@ -636,6 +729,7 @@
 <script>
         let exercises = JSON.parse(localStorage.getItem('exercises')) || [];
         let stats = JSON.parse(localStorage.getItem('stats')) || {};
+        let timers = JSON.parse(localStorage.getItem('timers')) || {};
         exercises.forEach(ex => {
             if (!ex.createdAt) ex.createdAt = ex.updatedAt || new Date().toISOString();
             if (!ex.category) ex.category = 'Matemática';
@@ -652,6 +746,7 @@
         let sortOrder = 'recent';
         let currentStatus = 'all';
         let currentView = 'exercises';
+        let activeTimers = {};
 
         function openModal(modal) {
             modal.style.display = 'block';
@@ -914,6 +1009,11 @@
                 const tagsHtml = exercise.tags && exercise.tags.length > 0 ? '<div class="tags">' + exercise.tags.map(tag => `<span class="tag">${tag}</span>`).join('') + '</div>' : '';
                 const exerciseDiv = document.createElement('div');
                 exerciseDiv.className = 'tweet';
+                const timerData = timers[index] || { current: 0, history: [] };
+                const timerDisplay = formatTime(timerData.current);
+                const historyHtml = timerData.history && timerData.history.length > 0 
+                    ? timerData.history.map((entry, i) => `<div class="history-entry"><div><span>#${i+1}:</span> ${entry.time} - ${new Date(entry.date).toLocaleString()}</div><button type="button" class="delete-time-btn" onclick="deleteTime(${index}, ${i})">×</button></div>`).join('')
+                    : '<div class="no-history">Nenhum tempo registrado</div>';
                 exerciseDiv.innerHTML = `
                     <div class="tweet-header">
                         <span class="difficulty ${exercise.difficulty}">${exercise.difficulty === 'easy' ? 'Fácil' : exercise.difficulty === 'medium' ? 'Médio' : 'Difícil'}</span>
@@ -925,9 +1025,22 @@
                         ${tagsHtml}
                         ${exercise.image ? `<img src="${exercise.image}" alt="Exercício">` : ''}
                         <p>${exercise.text}</p>
+                        <div class="timer-section">
+                            <div class="timer-display" id="timer-display-${index}">${timerDisplay}</div>
+                            <div class="timer-controls">
+                                <button class="timer-btn" id="timer-start-${index}" onclick="startTimer(${index})">Iniciar</button>
+                                <button class="timer-btn pause" id="timer-pause-${index}" onclick="pauseTimer(${index})" style="display:none;">Pausar</button>
+                                <button class="timer-btn reset" id="timer-reset-${index}" onclick="resetTimer(${index})">Reiniciar</button>
+                                <button class="timer-btn complete" id="timer-complete-${index}" onclick="completeTimer(${index})">Completar</button>
+                            </div>
+                            <div class="timer-history">
+                                <h5>Tempos Registrados:</h5>
+                                ${historyHtml}
+                            </div>
+                        </div>
                         ${exercise.alternatives.length > 0 ? '<h5>Alternativas:</h5><form class="alt-form">' + exercise.alternatives.map((alt, i) => `<label class="alt-label"><button type="button" class="rasurar-btn" data-alt-index="${i}">✂️</button> <span class="alt-text">${alt}</span> <input type="radio" name="alt${index}" value="${i}"></label><br>`).join('') + '</form><button class="responder-btn" data-index="' + index + '">Responder</button> <button class="limpar-btn" data-index="' + index + '">Limpar</button>' : ''}
                         <div class="answer-accordion ${exercise.alternatives.length === 0 ? '' : 'hidden'}" id="accordion-${index}">
-                            <button class="accordion-toggle">Mostrar Resposta</button>
+                            <button class="accordion-toggle">Mostrar Resolução</button>
                             <div class="accordion-content hidden">
                                 ${exercise.answerImage ? `<img src="${exercise.answerImage}" alt="Resposta">` : '<p>Sem imagem de resposta.</p>'}
                             </div>
@@ -1008,24 +1121,83 @@
             });
         }
 
-        function editExercise(index) {
-            const exercise = exercises[index];
-            document.getElementById('editTitle').value = exercise.title;
-            document.getElementById('editDifficulty').value = exercise.difficulty;
-            document.getElementById('editCategory').value = exercise.category;
-            document.getElementById('editExerciseText').value = exercise.text;
-            document.getElementById('editTags').value = exercise.tags ? exercise.tags.join(', ') : '';
-            editAlternativesContainer.innerHTML = '';
-            exercise.alternatives.forEach(alt => addEditAlternativeInput(alt));
-            document.getElementById('editCorrectAlt').value = exercise.correctIndex || 0;
-            editingIndex = index;
-            openModal(editModal);
+        function formatTime(seconds) {
+            const hrs = Math.floor(seconds / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function startTimer(index) {
+            if (activeTimers[index]) return;
+            const startBtn = document.getElementById(`timer-start-${index}`);
+            const pauseBtn = document.getElementById(`timer-pause-${index}`);
+            startBtn.style.display = 'none';
+            pauseBtn.style.display = 'block';
+            activeTimers[index] = setInterval(() => {
+                if (!timers[index]) timers[index] = { current: 0, history: [] };
+                timers[index].current++;
+                document.getElementById(`timer-display-${index}`).textContent = formatTime(timers[index].current);
+            }, 1000);
+        }
+
+        function pauseTimer(index) {
+            if (!activeTimers[index]) return;
+            clearInterval(activeTimers[index]);
+            activeTimers[index] = null;
+            const startBtn = document.getElementById(`timer-start-${index}`);
+            const pauseBtn = document.getElementById(`timer-pause-${index}`);
+            startBtn.style.display = 'block';
+            pauseBtn.style.display = 'none';
+        }
+
+        function resetTimer(index) {
+            if (activeTimers[index]) {
+                clearInterval(activeTimers[index]);
+                activeTimers[index] = null;
+            }
+            if (!timers[index]) timers[index] = { current: 0, history: [] };
+            timers[index].current = 0;
+            document.getElementById(`timer-display-${index}`).textContent = '00:00:00';
+            const startBtn = document.getElementById(`timer-start-${index}`);
+            const pauseBtn = document.getElementById(`timer-pause-${index}`);
+            startBtn.style.display = 'block';
+            pauseBtn.style.display = 'none';
+        }
+
+        function completeTimer(index) {
+            if (activeTimers[index]) {
+                clearInterval(activeTimers[index]);
+                activeTimers[index] = null;
+            }
+            if (!timers[index]) timers[index] = { current: 0, history: [] };
+            if (timers[index].current > 0) {
+                const timeEntry = {
+                    time: formatTime(timers[index].current),
+                    date: new Date().toISOString()
+                };
+                timers[index].history.push(timeEntry);
+                timers[index].current = 0;
+                localStorage.setItem('timers', JSON.stringify(timers));
+                displayExercises();
+            }
+        }
+
+        function deleteTime(index, timeIndex) {
+            if (confirm('Tem certeza que deseja excluir este tempo registrado?')) {
+                if (!timers[index]) timers[index] = { current: 0, history: [] };
+                timers[index].history.splice(timeIndex, 1);
+                localStorage.setItem('timers', JSON.stringify(timers));
+                displayExercises();
+            }
         }
 
         function deleteExercise(index) {
             if (confirm('Tem certeza que deseja excluir este exercício?')) {
                 exercises.splice(index, 1);
+                if (timers[index]) delete timers[index];
                 localStorage.setItem('exercises', JSON.stringify(exercises));
+                localStorage.setItem('timers', JSON.stringify(timers));
                 displayExercises();
             }
         }
