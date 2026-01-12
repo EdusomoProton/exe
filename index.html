@@ -136,6 +136,19 @@
         .tweet-header .favorite-btn:hover {
             color: #ffed4e;
         }
+        .tweet-header .annotation-btn {
+            background: none;
+            border: 1px solid #ddd;
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-right: 10px;
+        }
+        .tweet-header .annotation-btn:hover {
+            background: #f8f9fa;
+        }
         .tweet-content h4 {
             margin: 0 0 10px 0;
             color: #000;
@@ -447,6 +460,25 @@
             margin: 10px 0;
             font-family: 'Courier New', monospace;
         }
+        .timer-toggle {
+            text-align: right;
+            margin-bottom: 5px;
+        }
+        .timer-toggle-btn {
+            background: none;
+            border: none;
+            color: #1DA1F2;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .timer-toggle-btn:hover {
+            text-decoration: underline;
+        }
+        .timer-section.collapsed .timer-controls,
+        .timer-section.collapsed .timer-history,
+        .timer-section.collapsed .timer-display {
+            display: none;
+        }
         .timer-display {
             font-size: 32px;
             font-weight: bold;
@@ -532,6 +564,117 @@
         .delete-time-btn:hover {
             background: #c82333;
         }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            gap: 5px;
+        }
+        .pagination button {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: #fff;
+            color: #000;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .pagination button:hover {
+            background: #f8f9fa;
+        }
+        .pagination button.active {
+            background: #1DA1F2;
+            color: #fff;
+        }
+        .pagination button:disabled {
+            background: #e9ecef;
+            cursor: not-allowed;
+        }
+        .simulado-stats, .simulado-history {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+        .simulado-stats h3, .simulado-history h3 {
+            margin-top: 0;
+            color: #1DA1F2;
+        }
+        #createSimuladoBtn {
+            background: #1DA1F2;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        #createSimuladoBtn:hover {
+            background: #1991DB;
+        }
+        #clearHistoryBtn {
+            background: #dc3545;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+        #clearHistoryBtn:hover {
+            background: #c82333;
+        }
+        .simulado-question.correct {
+            border-left: 5px solid #28a745;
+        }
+        .simulado-question.incorrect {
+            border-left: 5px solid #dc3545;
+        }
+        .result-alternatives {
+            margin-top: 10px;
+        }
+        .alt-result {
+            padding: 5px;
+            margin: 2px 0;
+            border-radius: 3px;
+        }
+        .correct-answer {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .wrong-answer {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        #simuladoList button {
+            background: #1DA1F2;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        #simuladoList button:hover {
+            background: #1991DB;
+        }
+        .delete-simulado-btn {
+            background: #dc3545;
+            color: #fff;
+            border: none;
+            padding: 2px 6px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            margin-left: 10px;
+        }
+        .delete-simulado-btn:hover {
+            background: #c82333;
+        }
     </style>
 </head>
 <body>
@@ -579,13 +722,26 @@
     <div class="feed" id="exerciseList">
       <!-- Exercises will be displayed here -->
     </div>
+    <div id="pagination" class="pagination"></div>
     <div class="stats-section" id="statsSection" style="display: none;">
       <h2>Estatísticas</h2>
       <button id="addStatsBtn">Adicionar Estatísticas</button>
       <div id="statsList"></div>
     </div>
     <div class="simulado-section" id="simuladoSection" style="display: none;">
-      <h2>Simulado Aleatório</h2>
+      <h2>Simulado</h2>
+      <div class="simulado-stats">
+        <h3>Estatísticas</h3>
+        <p>Total de Simulados: <span id="totalSimulados">0</span></p>
+        <p>Média de Acertos: <span id="mediaAcertos">0%</span></p>
+        <p>Tempo Médio: <span id="tempoMedio">0 min</span></p>
+      </div>
+      <div class="simulado-history">
+        <h3>Histórico de Resultados</h3>
+        <button id="clearHistoryBtn">Limpar Histórico</button>
+        <div id="historyList"></div>
+      </div>
+      <button id="createSimuladoBtn">Criar Novo Simulado</button>
       <div id="simuladoList"></div>
       <button id="submitSimulado" style="display: none;">Enviar Simulado</button>
     </div>
@@ -726,10 +882,56 @@
   </div>
 </div>
 
+<!-- Modal for new simulado -->
+<div id="simuladoModal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="closeSimuladoModal">&times;</span>
+    <h2>Criar Novo Simulado</h2>
+    <label for="simuladoTime">Tempo (minutos):</label>
+    <input type="number" id="simuladoTime" min="1" value="30">
+
+    <label for="simuladoType">Tipo de Exercícios:</label>
+    <select id="simuladoType">
+      <option value="mixed">Misturado</option>
+      <option value="category">Categorias Específicas</option>
+      <option value="tag">Etiqueta Específica</option>
+      <option value="difficulty">Dificuldade Específica</option>
+    </select>
+
+    <div id="categoryOptions" style="display: none;">
+      <label for="simuladoCategory">Categoria:</label>
+      <select id="simuladoCategory">
+        <option value="Macroeconomia">Macroeconomia</option>
+        <option value="Microeconomia">Microeconomia</option>
+      </select>
+    </div>
+
+    <div id="tagOptions" style="display: none;">
+      <label for="simuladoTag">Etiqueta (#):</label>
+      <input type="text" id="simuladoTag" placeholder="#Tag">
+    </div>
+
+    <div id="difficultyOptions" style="display: none;">
+      <label for="simuladoDifficulty">Dificuldade:</label>
+      <select id="simuladoDifficulty">
+        <option value="easy">Fácil</option>
+        <option value="medium">Médio</option>
+        <option value="hard">Difícil</option>
+      </select>
+    </div>
+
+    <label for="numQuestions">Número de Questões:</label>
+    <input type="number" id="numQuestions" min="1" value="10">
+
+    <button id="startSimulado">Iniciar Simulado</button>
+  </div>
+</div>
+
 <script>
         let exercises = JSON.parse(localStorage.getItem('exercises')) || [];
         let stats = JSON.parse(localStorage.getItem('stats')) || {};
         let timers = JSON.parse(localStorage.getItem('timers')) || {};
+        let simuladoHistory = JSON.parse(localStorage.getItem('simuladoHistory')) || [];
         exercises.forEach(ex => {
             if (!ex.createdAt) ex.createdAt = ex.updatedAt || new Date().toISOString();
             if (!ex.category) ex.category = 'Matemática';
@@ -747,6 +949,8 @@
         let currentStatus = 'all';
         let currentView = 'exercises';
         let activeTimers = {};
+        let currentPage = 1;
+        let pageSize = 10;
 
         function openModal(modal) {
             modal.style.display = 'block';
@@ -789,6 +993,16 @@
         const simuladoSection = document.getElementById('simuladoSection');
         const simuladoList = document.getElementById('simuladoList');
         const submitSimulado = document.getElementById('submitSimulado');
+        const createSimuladoBtn = document.getElementById('createSimuladoBtn');
+        const simuladoModal = document.getElementById('simuladoModal');
+        const closeSimuladoModal = document.getElementById('closeSimuladoModal');
+        const startSimulado = document.getElementById('startSimulado');
+        const simuladoType = document.getElementById('simuladoType');
+        const categoryOptions = document.getElementById('categoryOptions');
+        const tagOptions = document.getElementById('tagOptions');
+        const difficultyOptions = document.getElementById('difficultyOptions');
+        const historyList = document.getElementById('historyList');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
         addAlternativeBtn.addEventListener('click', addAlternativeInput);
         editAddAlternativeBtn.addEventListener('click', addEditAlternativeInput);
@@ -799,22 +1013,26 @@
                 btn.classList.add('active');
                 document.getElementById('statsBtn').classList.remove('active');
                 currentCategory = btn.dataset.category;
+                currentPage = 1;
                 showExercises();
             });
         });
 
         searchInput.addEventListener('input', () => {
             searchTerm = searchInput.value.trim().toLowerCase();
+            currentPage = 1;
             showExercises();
         });
 
         sortSelect.addEventListener('change', () => {
             sortOrder = sortSelect.value;
+            currentPage = 1;
             showExercises();
         });
 
         statusSelect.addEventListener('change', () => {
             currentStatus = statusSelect.value;
+            currentPage = 1;
             showExercises();
         });
 
@@ -831,6 +1049,27 @@
             simuladoBtn.classList.add('active');
             showSimulado();
         });
+
+        createSimuladoBtn.addEventListener('click', () => openModal(simuladoModal));
+
+        clearHistoryBtn.addEventListener('click', () => {
+            if (confirm('Tem certeza que deseja limpar o histórico de simulados?')) {
+                simuladoHistory = [];
+                localStorage.setItem('simuladoHistory', JSON.stringify(simuladoHistory));
+                displaySimuladoStats();
+                displaySimuladoHistory();
+            }
+        });
+
+        closeSimuladoModal.addEventListener('click', () => closeModalWindow(simuladoModal));
+
+        simuladoType.addEventListener('change', () => {
+            categoryOptions.style.display = simuladoType.value === 'category' ? 'block' : 'none';
+            tagOptions.style.display = simuladoType.value === 'tag' ? 'block' : 'none';
+            difficultyOptions.style.display = simuladoType.value === 'difficulty' ? 'block' : 'none';
+        });
+
+        startSimulado.addEventListener('click', startNewSimulado);
 
         addAlternativeBtn.addEventListener('click', addAlternativeInput);
 
@@ -989,7 +1228,7 @@
                 const diffOrder = { easy: 1, medium: 2, hard: 3 };
                 exercises.sort((a, b) => diffOrder[b.difficulty] - diffOrder[a.difficulty]);
             }
-            exerciseList.innerHTML = '';
+            let filteredIndices = [];
             exercises.forEach((exercise, index) => {
                 if (currentCategory !== 'Todos' && exercise.category !== currentCategory) return;
                 if (currentStatus === 'done' && !exercise.done) return;
@@ -1006,6 +1245,16 @@
                     });
                     if (!matches) return;
                 }
+                filteredIndices.push(index);
+            });
+            const totalPages = Math.ceil(filteredIndices.length / pageSize);
+            if (currentPage > totalPages) currentPage = totalPages || 1;
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const pageIndices = filteredIndices.slice(startIndex, endIndex);
+            exerciseList.innerHTML = '';
+            pageIndices.forEach(index => {
+                const exercise = exercises[index];
                 const tagsHtml = exercise.tags && exercise.tags.length > 0 ? '<div class="tags">' + exercise.tags.map(tag => `<span class="tag">${tag}</span>`).join('') + '</div>' : '';
                 const exerciseDiv = document.createElement('div');
                 exerciseDiv.className = 'tweet';
@@ -1018,6 +1267,7 @@
                     <div class="tweet-header">
                         <span class="difficulty ${exercise.difficulty}">${exercise.difficulty === 'easy' ? 'Fácil' : exercise.difficulty === 'medium' ? 'Médio' : 'Difícil'}</span>
                         <span class="category">${exercise.category}</span>
+                        <button class="annotation-btn ${exercise.annotations ? 'has-annotations' : ''}" onclick="openAnnotationModal(${index})">Anotações</button>
                         <button class="favorite-btn" onclick="toggleFavorite(${index})">${exercise.favorite ? '★' : '☆'}</button>
                     </div>
                     <div class="tweet-content">
@@ -1025,7 +1275,10 @@
                         ${tagsHtml}
                         ${exercise.image ? `<img src="${exercise.image}" alt="Exercício">` : ''}
                         <p>${exercise.text}</p>
-                        <div class="timer-section">
+                        <div class="timer-section collapsed">
+                            <div class="timer-toggle">
+                                <button class="timer-toggle-btn" onclick="toggleTimer(${index})">Expandir ▼</button>
+                            </div>
                             <div class="timer-display" id="timer-display-${index}">${timerDisplay}</div>
                             <div class="timer-controls">
                                 <button class="timer-btn" id="timer-start-${index}" onclick="startTimer(${index})">Iniciar</button>
@@ -1049,7 +1302,6 @@
                     <div class="menu-container"><button class="menu-btn" onclick="toggleMenu(${index})">⋮</button><div class="dropdown-menu hidden" id="menu-${index}"><button class="edit-btn" onclick="editExercise(${index})">Editar</button><br><button class="delete-btn" onclick="deleteExercise(${index})">Excluir</button><br><button class="info-btn" onclick="showInfo(${index})">Info.</button></div></div>
                     <div class="tweet-actions">
                         <button class="feito-btn ${exercise.done ? 'done' : ''}" onclick="toggleDone(${index})">Feito</button>
-                        <button class="annotation-btn ${exercise.annotations ? 'has-annotations' : ''}" onclick="openAnnotationModal(${index})">Anotações</button>
                     </div>
                 `;
                 exerciseList.appendChild(exerciseDiv);
@@ -1119,6 +1371,64 @@
                     });
                 }
             });
+            renderPagination(totalPages);
+        }
+
+        function renderPagination(totalPages) {
+            const paginationDiv = document.getElementById('pagination');
+            paginationDiv.innerHTML = '';
+            if (totalPages <= 1) return;
+            // Previous button
+            const prevBtn = document.createElement('button');
+            prevBtn.textContent = 'Anterior';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    displayExercises();
+                }
+            });
+            paginationDiv.appendChild(prevBtn);
+            // Page numbers
+            const maxVisible = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+            if (endPage - startPage + 1 < maxVisible) {
+                startPage = Math.max(1, endPage - maxVisible + 1);
+            }
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.textContent = i;
+                if (i === currentPage) pageBtn.classList.add('active');
+                pageBtn.addEventListener('click', () => {
+                    currentPage = i;
+                    displayExercises();
+                });
+                paginationDiv.appendChild(pageBtn);
+            }
+            // Next button
+            const nextBtn = document.createElement('button');
+            nextBtn.textContent = 'Próximo';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    displayExercises();
+                }
+            });
+            paginationDiv.appendChild(nextBtn);
+        }
+
+        function toggleTimer(index) {
+            const timerSection = document.querySelector(`#exerciseList .tweet:nth-child(${index + 1}) .timer-section`);
+            const toggleBtn = timerSection.querySelector('.timer-toggle-btn');
+            if (timerSection.classList.contains('collapsed')) {
+                timerSection.classList.remove('collapsed');
+                toggleBtn.textContent = 'Recolher ▲';
+            } else {
+                timerSection.classList.add('collapsed');
+                toggleBtn.textContent = 'Expandir ▼';
+            }
         }
 
         function formatTime(seconds) {
@@ -1190,6 +1500,58 @@
                 localStorage.setItem('timers', JSON.stringify(timers));
                 displayExercises();
             }
+        }
+
+        function initializeSimuladoTimer(timerDiv, totalSeconds) {
+            let remaining = totalSeconds;
+            const display = timerDiv.querySelector('.timer-display');
+            const startBtn = timerDiv.querySelector('.timer-btn.start');
+            const pauseBtn = timerDiv.querySelector('.timer-btn.pause');
+            const resetBtn = timerDiv.querySelector('.timer-btn.reset');
+            const toggleBtn = timerDiv.querySelector('.timer-toggle-btn');
+            let interval;
+
+            function updateDisplay() {
+                const mins = Math.floor(remaining / 60);
+                const secs = remaining % 60;
+                display.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            }
+
+            updateDisplay();
+
+            startBtn.addEventListener('click', () => {
+                if (interval) return;
+                interval = setInterval(() => {
+                    remaining--;
+                    updateDisplay();
+                    if (remaining <= 0) {
+                        clearInterval(interval);
+                        alert('Tempo esgotado!');
+                    }
+                }, 1000);
+                startBtn.style.display = 'none';
+                pauseBtn.style.display = 'inline-block';
+            });
+
+            pauseBtn.addEventListener('click', () => {
+                clearInterval(interval);
+                interval = null;
+                startBtn.style.display = 'inline-block';
+                pauseBtn.style.display = 'none';
+            });
+
+            resetBtn.addEventListener('click', () => {
+                clearInterval(interval);
+                interval = null;
+                remaining = totalSeconds;
+                updateDisplay();
+                startBtn.style.display = 'inline-block';
+                pauseBtn.style.display = 'none';
+            });
+
+            toggleBtn.addEventListener('click', () => {
+                timerDiv.classList.toggle('collapsed');
+            });
         }
 
         function deleteExercise(index) {
@@ -1301,19 +1663,103 @@
             exerciseList.style.display = 'none';
             statsSection.style.display = 'none';
             simuladoSection.style.display = 'block';
-            generateSimulado();
+            document.getElementById('statsBtn').classList.remove('active');
+            simuladoBtn.classList.add('active');
+            displaySimuladoStats();
+            displaySimuladoHistory();
+            simuladoList.innerHTML = '';
+            submitSimulado.style.display = 'none';
         }
 
-        function generateSimulado() {
-            const eligible = exercises.filter(ex => ex.alternatives && ex.alternatives.length > 0);
-            if (eligible.length < 10) {
-                alert('Não há questões suficientes com alternativas para gerar um simulado de 10 questões.');
+        function displaySimuladoStats() {
+            const total = simuladoHistory.length;
+            const mediaAcertos = total > 0 ? (simuladoHistory.reduce((sum, s) => sum + (s.correct / s.total * 100), 0) / total).toFixed(1) : 0;
+            const tempoMedio = total > 0 ? (simuladoHistory.reduce((sum, s) => sum + s.time, 0) / total).toFixed(1) : 0;
+            document.getElementById('totalSimulados').textContent = total;
+            document.getElementById('mediaAcertos').textContent = mediaAcertos + '%';
+            document.getElementById('tempoMedio').textContent = tempoMedio + ' min';
+        }
+
+        function displaySimuladoHistory() {
+            historyList.innerHTML = '';
+            simuladoHistory.slice(-10).reverse().forEach((simulado, index) => {
+                const div = document.createElement('div');
+                div.className = 'history-entry';
+                const date = new Date(simulado.date).toLocaleDateString('pt-BR');
+                const percentage = ((simulado.correct / simulado.total) * 100).toFixed(1);
+                div.innerHTML = `
+                    <span>${date}: ${simulado.correct}/${simulado.total} (${percentage}%) - ${simulado.time} min</span>
+                    <button class="delete-simulado-btn" onclick="deleteSimulado(${simuladoHistory.length - 1 - index})">Excluir</button>
+                `;
+                historyList.appendChild(div);
+            });
+        }
+
+        function deleteSimulado(index) {
+            if (confirm('Tem certeza que deseja excluir este simulado do histórico?')) {
+                simuladoHistory.splice(index, 1);
+                localStorage.setItem('simuladoHistory', JSON.stringify(simuladoHistory));
+                displaySimuladoStats();
+                displaySimuladoHistory();
+            }
+        }
+
+        function startNewSimulado() {
+            const time = parseInt(document.getElementById('simuladoTime').value);
+            const type = document.getElementById('simuladoType').value;
+            const numQuestions = parseInt(document.getElementById('numQuestions').value);
+            let category = null;
+            let tag = null;
+            let difficulty = null;
+            if (type === 'category') {
+                category = document.getElementById('simuladoCategory').value;
+            } else if (type === 'tag') {
+                tag = document.getElementById('simuladoTag').value.trim();
+            } else if (type === 'difficulty') {
+                difficulty = document.getElementById('simuladoDifficulty').value;
+            }
+            closeModalWindow(simuladoModal);
+            generateSimulado({ time, type, numQuestions, category, tag, difficulty });
+        }
+
+        function generateSimulado(options) {
+            let eligible = exercises.filter(ex => ex.alternatives && ex.alternatives.length > 0);
+            if (options.type === 'category') {
+                eligible = eligible.filter(ex => ex.category === options.category);
+            } else if (options.type === 'tag') {
+                eligible = eligible.filter(ex => ex.tags && ex.tags.some(t => t.toLowerCase().includes(options.tag.toLowerCase())));
+            } else if (options.type === 'difficulty') {
+                eligible = eligible.filter(ex => ex.difficulty === options.difficulty);
+            }
+            if (eligible.length < options.numQuestions) {
+                alert(`Não há questões suficientes (${eligible.length}) para gerar um simulado de ${options.numQuestions} questões.`);
                 return;
             }
             const shuffled = eligible.sort(() => 0.5 - Math.random());
-            const selected = shuffled.slice(0, 10);
+            const selected = shuffled.slice(0, options.numQuestions);
             window.selectedExercises = selected;
+            window.simuladoOptions = options;
+            window.startTime = Date.now();
             simuladoList.innerHTML = '';
+            if (options.time > 0) {
+                const timerDiv = document.createElement('div');
+                timerDiv.className = 'timer-section';
+                timerDiv.innerHTML = `
+                    <div class="timer-toggle">
+                        <button class="timer-toggle-btn">⏱️ Cronômetro</button>
+                    </div>
+                    <div class="timer-controls">
+                        <button class="timer-btn start">Iniciar</button>
+                        <button class="timer-btn pause">Pausar</button>
+                        <button class="timer-btn reset">Resetar</button>
+                    </div>
+                    <div class="timer-display">00:00</div>
+                    <div class="timer-history"></div>
+                `;
+                simuladoList.appendChild(timerDiv);
+                // Initialize timer
+                initializeSimuladoTimer(timerDiv, options.time * 60);
+            }
             selected.forEach((ex, i) => {
                 const div = document.createElement('div');
                 div.className = 'simulado-question';
@@ -1329,6 +1775,10 @@
                 simuladoList.appendChild(div);
             });
             submitSimulado.style.display = 'block';
+            // Start timer if time > 0
+            if (options.time > 0) {
+                startTimer(options.time * 60); // convert to seconds
+            }
         }
 
         function deleteStats(date) {
@@ -1384,15 +1834,62 @@
         submitSimulado.onclick = function() {
             const questions = simuladoList.querySelectorAll('.simulado-question');
             let correct = 0;
+            const userAnswers = [];
             questions.forEach((q, i) => {
                 const selected = q.querySelector('input:checked');
-                if (selected && parseInt(selected.value) === window.selectedExercises[i].correctIndex) {
+                const selectedIndex = selected ? parseInt(selected.value) : -1;
+                userAnswers.push(selectedIndex);
+                if (selectedIndex === window.selectedExercises[i].correctIndex) {
                     correct++;
                 }
             });
-            alert(`Você acertou ${correct} de ${questions.length} questões.`);
-            showExercises();
+            const total = questions.length;
+            const timeSpent = Math.round((Date.now() - window.startTime) / 60000);
+            const result = {
+                date: new Date().toISOString(),
+                correct,
+                total,
+                time: timeSpent
+            };
+            simuladoHistory.push(result);
+            localStorage.setItem('simuladoHistory', JSON.stringify(simuladoHistory));
+            displaySimuladoStats();
+            displaySimuladoHistory();
+
+            // Show results
+            showSimuladoResults(userAnswers);
         };
+
+        function showSimuladoResults(userAnswers) {
+            simuladoList.innerHTML = '<h3>Resultado do Simulado</h3>';
+            window.selectedExercises.forEach((ex, i) => {
+                const userChoice = userAnswers[i];
+                const isCorrect = userChoice === ex.correctIndex;
+                const div = document.createElement('div');
+                div.className = `simulado-question ${isCorrect ? 'correct' : 'incorrect'}`;
+                div.innerHTML = `
+                    <h4>${i+1}. ${ex.title} ${isCorrect ? '✅' : '❌'}</h4>
+                    ${ex.tags ? '<div class="tags">' + ex.tags.map(tag => `<span class="tag">${tag}</span>`).join('') + '</div>' : ''}
+                    ${ex.image ? `<img src="${ex.image}" alt="Exercício">` : ''}
+                    <p>${ex.text}</p>
+                    <div class="result-alternatives">
+                        ${ex.alternatives.map((alt, j) => {
+                            let className = '';
+                            if (j === ex.correctIndex) className = 'correct-answer';
+                            else if (j === userChoice) className = 'wrong-answer';
+                            return `<div class="alt-result ${className}">${alt}</div>`;
+                        }).join('')}
+                    </div>
+                `;
+                simuladoList.appendChild(div);
+            });
+            submitSimulado.style.display = 'none';
+            // Add a button to go back
+            const backBtn = document.createElement('button');
+            backBtn.textContent = 'Voltar ao Simulado';
+            backBtn.onclick = () => showSimulado();
+            simuladoList.appendChild(backBtn);
+        }
 
         saveEdit.onclick = function() {
             const title = document.getElementById('editTitle').value;
@@ -1463,6 +1960,24 @@
             displayExercises();
             closeModalWindow(editModal);
         };
+
+        function editExercise(index) {
+            editingIndex = index;
+            const ex = exercises[index];
+            document.getElementById('editTitle').value = ex.title;
+            document.getElementById('editDifficulty').value = ex.difficulty;
+            document.getElementById('editCategory').value = ex.category;
+            document.getElementById('editExerciseText').value = ex.text || '';
+            document.getElementById('editTags').value = ex.tags ? ex.tags.join(', ') : '';
+            // Clear previous alternatives
+            editAlternativesContainer.innerHTML = '';
+            if (ex.alternatives && ex.alternatives.length > 0) {
+                ex.alternatives.forEach((alt, i) => addEditAlternativeInput(alt));
+            }
+            updateEditCorrectAltOptions();
+            document.getElementById('editCorrectAlt').value = ex.correctIndex || 0;
+            openModal(editModal);
+        }
 
         // Paste image
         document.getElementById('image').addEventListener('paste', handlePaste);
