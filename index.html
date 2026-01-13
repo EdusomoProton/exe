@@ -99,6 +99,29 @@
             background: #fff;
             color: #000;
         }
+        fieldset {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            padding: 10px;
+        }
+        legend {
+            font-weight: bold;
+            color: #1DA1F2;
+        }
+        .filter-group {
+            margin-bottom: 10px;
+        }
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
         .feed .tweet {
             border: 1px solid #ddd;
             border-radius: 10px;
@@ -891,43 +914,50 @@
   <div class="modal-content">
     <span class="close" id="closeSimuladoModal">&times;</span>
     <h2>Criar Novo Simulado</h2>
-    <label for="simuladoTime">Tempo (minutos):</label>
-    <input type="number" id="simuladoTime" min="1" value="30">
-
-    <label for="simuladoType">Tipo de Exercícios:</label>
-    <select id="simuladoType">
-      <option value="mixed">Misturado</option>
-      <option value="category">Categorias Específicas</option>
-      <option value="tag">Etiqueta Específica</option>
-      <option value="difficulty">Dificuldade Específica</option>
-    </select>
-
-    <div id="categoryOptions" style="display: none;">
-      <label for="simuladoCategory">Categoria:</label>
-      <select id="simuladoCategory">
-        <option value="Macroeconomia">Macroeconomia</option>
-        <option value="Microeconomia">Microeconomia</option>
-      </select>
-    </div>
-
-    <div id="tagOptions" style="display: none;">
-      <label for="simuladoTag">Etiqueta (#):</label>
-      <input type="text" id="simuladoTag" placeholder="#Tag">
-    </div>
-
-    <div id="difficultyOptions" style="display: none;">
-      <label for="simuladoDifficulty">Dificuldade:</label>
-      <select id="simuladoDifficulty">
-        <option value="easy">Fácil</option>
-        <option value="medium">Médio</option>
-        <option value="hard">Difícil</option>
-      </select>
-    </div>
-
-    <label for="numQuestions">Número de Questões:</label>
-    <input type="number" id="numQuestions" min="1" value="10">
-
-    <button id="startSimulado">Iniciar Simulado</button>
+    <form id="simuladoForm">
+      <fieldset>
+        <legend>Configurações Gerais</legend>
+        <label for="simuladoTime">Tempo (minutos):</label>
+        <input type="number" id="simuladoTime" min="1" value="30" required>
+        
+        <label for="numQuestions">Número de Questões:</label>
+        <input type="number" id="numQuestions" min="1" value="10" required>
+      </fieldset>
+      
+      <fieldset>
+        <legend>Filtros (selecione os desejados)</legend>
+        <div class="filter-group">
+          <strong>Dificuldade:</strong>
+          <div class="checkbox-group">
+            <input type="checkbox" id="difficultyEasy" value="easy">
+            <label for="difficultyEasy">Fácil</label>
+            <input type="checkbox" id="difficultyMedium" value="medium">
+            <label for="difficultyMedium">Médio</label>
+            <input type="checkbox" id="difficultyHard" value="hard">
+            <label for="difficultyHard">Difícil</label>
+          </div>
+        </div>
+        <div class="filter-group">
+          <strong>Categoria:</strong>
+          <div class="checkbox-group">
+            <input type="checkbox" id="categoryMatematica" value="Matemática">
+            <label for="categoryMatematica">Matemática</label>
+            <input type="checkbox" id="categoryMicroeconomia" value="Microeconomia">
+            <label for="categoryMicroeconomia">Microeconomia</label>
+            <input type="checkbox" id="categoryMacroeconomia" value="Macroeconomia">
+            <label for="categoryMacroeconomia">Macroeconomia</label>
+            <input type="checkbox" id="categoryEstatistica" value="Estatística">
+            <label for="categoryEstatistica">Estatística</label>
+          </div>
+        </div>
+        <div class="filter-group">
+          <label for="simuladoTag">Etiquetas (#, separadas por vírgula, opcional):</label>
+          <input type="text" id="simuladoTag" placeholder="#Tag1, #Tag2">
+        </div>
+      </fieldset>
+      
+      <button type="button" id="startSimulado">Iniciar Simulado</button>
+    </form>
   </div>
 </div>
 
@@ -1003,10 +1033,6 @@
         const simuladoModal = document.getElementById('simuladoModal');
         const closeSimuladoModal = document.getElementById('closeSimuladoModal');
         const startSimulado = document.getElementById('startSimulado');
-        const simuladoType = document.getElementById('simuladoType');
-        const categoryOptions = document.getElementById('categoryOptions');
-        const tagOptions = document.getElementById('tagOptions');
-        const difficultyOptions = document.getElementById('difficultyOptions');
         const historyList = document.getElementById('historyList');
         const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
@@ -1075,13 +1101,9 @@
         importBtn.addEventListener('click', () => importFile.click());
         importFile.addEventListener('change', importData);
 
-        closeSimuladoModal.addEventListener('click', () => closeModalWindow(simuladoModal));
+        const simuladoForm = document.getElementById('simuladoForm');
 
-        simuladoType.addEventListener('change', () => {
-            categoryOptions.style.display = simuladoType.value === 'category' ? 'block' : 'none';
-            tagOptions.style.display = simuladoType.value === 'tag' ? 'block' : 'none';
-            difficultyOptions.style.display = simuladoType.value === 'difficulty' ? 'block' : 'none';
-        });
+        closeSimuladoModal.addEventListener('click', () => closeModalWindow(simuladoModal));
 
         startSimulado.addEventListener('click', startNewSimulado);
 
@@ -1720,30 +1742,31 @@
 
         function startNewSimulado() {
             const time = parseInt(document.getElementById('simuladoTime').value);
-            const type = document.getElementById('simuladoType').value;
             const numQuestions = parseInt(document.getElementById('numQuestions').value);
-            let category = null;
-            let tag = null;
-            let difficulty = null;
-            if (type === 'category') {
-                category = document.getElementById('simuladoCategory').value;
-            } else if (type === 'tag') {
-                tag = document.getElementById('simuladoTag').value.trim();
-            } else if (type === 'difficulty') {
-                difficulty = document.getElementById('simuladoDifficulty').value;
-            }
+            const selectedDifficulties = [];
+            if (document.getElementById('difficultyEasy').checked) selectedDifficulties.push('easy');
+            if (document.getElementById('difficultyMedium').checked) selectedDifficulties.push('medium');
+            if (document.getElementById('difficultyHard').checked) selectedDifficulties.push('hard');
+            const selectedCategories = [];
+            if (document.getElementById('categoryMatematica').checked) selectedCategories.push('Matemática');
+            if (document.getElementById('categoryMicroeconomia').checked) selectedCategories.push('Microeconomia');
+            if (document.getElementById('categoryMacroeconomia').checked) selectedCategories.push('Macroeconomia');
+            if (document.getElementById('categoryEstatistica').checked) selectedCategories.push('Estatística');
+            const tags = document.getElementById('simuladoTag').value.trim().split(',').map(t => t.trim()).filter(t => t);
             closeModalWindow(simuladoModal);
-            generateSimulado({ time, type, numQuestions, category, tag, difficulty });
+            generateSimulado({ time, numQuestions, selectedDifficulties, selectedCategories, tags });
         }
 
         function generateSimulado(options) {
             let eligible = exercises.filter(ex => ex.alternatives && ex.alternatives.length > 0);
-            if (options.type === 'category') {
-                eligible = eligible.filter(ex => ex.category === options.category);
-            } else if (options.type === 'tag') {
-                eligible = eligible.filter(ex => ex.tags && ex.tags.some(t => t.toLowerCase().includes(options.tag.toLowerCase())));
-            } else if (options.type === 'difficulty') {
-                eligible = eligible.filter(ex => ex.difficulty === options.difficulty);
+            if (options.selectedDifficulties.length > 0) {
+                eligible = eligible.filter(ex => options.selectedDifficulties.includes(ex.difficulty));
+            }
+            if (options.selectedCategories.length > 0) {
+                eligible = eligible.filter(ex => options.selectedCategories.includes(ex.category));
+            }
+            if (options.tags && options.tags.length > 0) {
+                eligible = eligible.filter(ex => ex.tags && options.tags.some(tag => ex.tags.some(t => t.toLowerCase().includes(tag.toLowerCase()))));
             }
             if (eligible.length < options.numQuestions) {
                 alert(`Não há questões suficientes (${eligible.length}) para gerar um simulado de ${options.numQuestions} questões.`);
@@ -2060,3 +2083,4 @@
     </script>
 </body>
 </html>
+
