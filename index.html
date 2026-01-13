@@ -699,6 +699,10 @@
       <button class="stats-btn" id="statsBtn">Stats</button>
       <br><br>
       <button class="simulado-btn" id="simuladoBtn">Simulado</button>
+      <br><br>
+      <button id="exportBtn">Exportar Dados</button>
+      <br><br>
+      <button id="importBtn">Importar Dados</button>
     </nav>
   </aside>
   <main class="main-content">
@@ -927,6 +931,8 @@
   </div>
 </div>
 
+<input type="file" id="importFile" accept=".json" style="display:none">
+
 <script>
         let exercises = JSON.parse(localStorage.getItem('exercises')) || [];
         let stats = JSON.parse(localStorage.getItem('stats')) || {};
@@ -1004,6 +1010,10 @@
         const historyList = document.getElementById('historyList');
         const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
+        const exportBtn = document.getElementById('exportBtn');
+        const importBtn = document.getElementById('importBtn');
+        const importFile = document.getElementById('importFile');
+
         addAlternativeBtn.addEventListener('click', addAlternativeInput);
         editAddAlternativeBtn.addEventListener('click', addEditAlternativeInput);
         newExerciseBtn.addEventListener('click', () => openModal(newModal));
@@ -1060,6 +1070,10 @@
                 displaySimuladoHistory();
             }
         });
+
+        exportBtn.addEventListener('click', exportData);
+        importBtn.addEventListener('click', () => importFile.click());
+        importFile.addEventListener('change', importData);
 
         closeSimuladoModal.addEventListener('click', () => closeModalWindow(simuladoModal));
 
@@ -1996,6 +2010,52 @@
                     e.target.files = dt.files;
                 }
             }
+        }
+
+        function exportData() {
+            const data = {
+                exercises,
+                stats,
+                timers,
+                simuladoHistory
+            };
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'dados_exercicios.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    if (data.exercises) exercises = data.exercises;
+                    if (data.stats) stats = data.stats;
+                    if (data.timers) timers = data.timers;
+                    if (data.simuladoHistory) simuladoHistory = data.simuladoHistory;
+                    localStorage.setItem('exercises', JSON.stringify(exercises));
+                    localStorage.setItem('stats', JSON.stringify(stats));
+                    localStorage.setItem('timers', JSON.stringify(timers));
+                    localStorage.setItem('simuladoHistory', JSON.stringify(simuladoHistory));
+                    displayExercises();
+                    if (currentView === 'stats') displayStats();
+                    if (currentView === 'simulado') {
+                        displaySimuladoStats();
+                        displaySimuladoHistory();
+                    }
+                    alert('Dados importados com sucesso!');
+                } catch (error) {
+                    alert('Erro ao importar dados: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
         }
     </script>
 </body>
