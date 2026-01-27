@@ -1178,6 +1178,13 @@
             </label>
         </div>
         
+        <div style="margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 8px; margin-bottom: 15px;">
+            <strong>💾 IndexedDB Ativado</strong>
+            <p style="margin: 8px 0; font-size: 14px;">
+                Seu armazenamento agora usa <strong>IndexedDB (50MB+)</strong> como principal, com localStorage como backup automático.
+            </p>
+        </div>
+        
         <div style="margin-top: 20px;">
             <button id="calculateStorageBtn" style="background: #2196F3; color: white; padding: 10px 15px; margin-right: 10px; border: none; border-radius: 5px; cursor: pointer;">Recalcular</button>
             <button id="cleanupStorageBtn" style="background: #ff5722; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer;">🗑️ Limpar Selecionados</button>
@@ -1248,38 +1255,253 @@
 <input type="file" id="importFile" accept=".json" style="display:none">
 
 <script>
-        let exercises = JSON.parse(localStorage.getItem('exercises')) || [];
-        let stats = JSON.parse(localStorage.getItem('stats')) || {};
-        let timers = JSON.parse(localStorage.getItem('timers')) || {};
-        let simuladoHistory = JSON.parse(localStorage.getItem('simuladoHistory')) || [];
+        // IndexedDB Setup - Primary storage (50MB+)
+        let db = null;
+        const DB_NAME = 'ExerciseApp';
+        const DB_VERSION = 1;
+        const STORES = {
+            exercises: 'exercises',
+            stats: 'stats',
+            timers: 'timers',
+            simuladoHistory: 'simuladoHistory'
+        };
         
-        // Helper function to save with error handling
-        function saveToLocalStorage(key, data) {
+        // Initialize IndexedDB
+        function initIndexedDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                
+                request.onerror = () => {
+                    console.error('IndexedDB error:', request.error);
+                    reject(request.error);
+                };
+                
+                request.onsuccess = () => {
+                    db = request.result;
+                    console.log('IndexedDB initialized successfully');
+                    resolve(db);
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    
+                    // Create object stores if they don't exist
+                    Object.values(STORES).forEach(storeName => {
+                        if (!db.objectStoreNames.contains(storeName)) {
+                            db.createObjectStore(storeName, { keyPath: 'id', autoIncrement: true });
+                        }
+                    });
+                };
+            });
+        }
+        
+        // Save to IndexedDB
+        function saveToIndexedDB(storeName, key, data) {
+            return new Promise((resolve, reject) => {
+                if (!db) {
+                    reject('IndexedDB not initialized');
+                    return;
+                }
+                
+                try {
+                    const transaction = db.transaction([storeName], 'readwrite');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.put({ id: key, data: data });
+                    
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        }
+        
+        // Load from IndexedDB
+        function loadFromIndexedDB(storeName, key) {
+            return new Promise((resolve, reject) => {
+                if (!db) {
+                    reject('IndexedDB not initialized');
+                    return;
+                }
+                
+                try {
+                    const transaction = db.transaction([storeName], 'readonly');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.get(key);
+                    
+                    request.onsuccess = () => {
+                        resolve(request.result ? request.result.data : null);
+                    };
+                    request.onerror = () => reject(request.error);
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        }
+        
+        // Get all items from a store
+        function getAllFromIndexedDB(storeName) {
+            return new Promise((resolve, reject) => {
+                if (!db) {
+                    reject('IndexedDB not initialized');
+                    return;
+                }
+                
+                try {
+                    const transaction = db.transaction([storeName], 'readonly');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.getAll();
+                    
+                    request.onsuccess = () => {
+                        const items = request.result.map(item => item.data);
+                        resolve(items);
+                    };
+                    request.onerror = () => reject(request.error);
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        }
+        
+        // Clear a store
+        function clearIndexedDBStore(storeName) {
+            return new Promise((resolve, reject) => {
+                if (!db) {
+                    reject('IndexedDB not initialized');
+                    return;
+                }
+                
+                try {
+                    const transaction = db.transaction([storeName], 'readwrite');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.clear();
+                    
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        }
+        
+        // Load data - tries IndexedDB first, falls back to localStorage
+        async function loadData() {
             try {
-                localStorage.setItem(key, JSON.stringify(data));
+                const exercisesFromDB = await loadFromIndexedDB(STORES.exercises, 'exercises');
+                const statsFromDB = await loadFromIndexedDB(STORES.stats, 'stats');
+                const timersFromDB = await loadFromIndexedDB(STORES.timers, 'timers');
+                const simuladoFromDB = await loadFromIndexedDB(STORES.simuladoHistory, 'simuladoHistory');
+                
+                return {
+                    exercises: exercisesFromDB || JSON.parse(localStorage.getItem('exercises')) || [],
+                    stats: statsFromDB || JSON.parse(localStorage.getItem('stats')) || {},
+                    timers: timersFromDB || JSON.parse(localStorage.getItem('timers')) || {},
+                    simuladoHistory: simuladoFromDB || JSON.parse(localStorage.getItem('simuladoHistory')) || []
+                };
             } catch (error) {
-                if (error.name === 'QuotaExceededError' || error.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
-                    alert('⚠️ Espaço de armazenamento CHEIO!\n\nAbra o gerenciador de Storage (botão 📊 no menu) para limpar dados manualmente.');
-                } else {
-                    console.error('Erro ao salvar:', error);
-                    alert('Erro ao salvar dados: ' + error.message);
+                console.log('Usando localStorage como fallback:', error);
+                return {
+                    exercises: JSON.parse(localStorage.getItem('exercises')) || [],
+                    stats: JSON.parse(localStorage.getItem('stats')) || {},
+                    timers: JSON.parse(localStorage.getItem('timers')) || {},
+                    simuladoHistory: JSON.parse(localStorage.getItem('simuladoHistory')) || []
+                };
+            }
+        }
+        
+        let exercises = [];
+        let stats = {};
+        let timers = {};
+        let simuladoHistory = [];
+        
+        // Initialize on load
+        initIndexedDB().then(async () => {
+            const data = await loadData();
+            exercises = data.exercises;
+            stats = data.stats;
+            timers = data.timers;
+            simuladoHistory = data.simuladoHistory;
+            
+            // Process exercises
+            exercises.forEach(ex => {
+                if (!ex.createdAt) ex.createdAt = ex.updatedAt || new Date().toISOString();
+                if (!ex.category) ex.category = 'Matemática';
+                if (ex.alternatives && ex.alternatives.length > 0 && ex.correctIndex === undefined) {
+                    ex.correctIndex = 0;
+                }
+                if (!ex.done) ex.done = false;
+                if (!ex.favorite) ex.favorite = false;
+                if (!ex.status) {
+                    ex.status = ex.done ? 'done' : 'not-done';
+                }
+            });
+            
+            console.log('Dados carregados com sucesso!');
+            showExercises();
+        }).catch(error => {
+            console.error('Erro ao inicializar IndexedDB, usando localStorage:', error);
+            exercises = JSON.parse(localStorage.getItem('exercises')) || [];
+            stats = JSON.parse(localStorage.getItem('stats')) || {};
+            timers = JSON.parse(localStorage.getItem('timers')) || {};
+            simuladoHistory = JSON.parse(localStorage.getItem('simuladoHistory')) || [];
+            
+            exercises.forEach(ex => {
+                if (!ex.createdAt) ex.createdAt = ex.updatedAt || new Date().toISOString();
+                if (!ex.category) ex.category = 'Matemática';
+                if (ex.alternatives && ex.alternatives.length > 0 && ex.correctIndex === undefined) {
+                    ex.correctIndex = 0;
+                }
+                if (!ex.done) ex.done = false;
+                if (!ex.favorite) ex.favorite = false;
+                if (!ex.status) {
+                    ex.status = ex.done ? 'done' : 'not-done';
+                }
+            });
+            
+            showExercises();
+        });
+        
+        // Helper function to save with IndexedDB + localStorage fallback
+        async function saveToStorage(key, data) {
+            try {
+                // Save to IndexedDB first
+                if (db) {
+                    const storeMap = {
+                        'exercises': STORES.exercises,
+                        'stats': STORES.stats,
+                        'timers': STORES.timers,
+                        'simuladoHistory': STORES.simuladoHistory
+                    };
+                    
+                    if (storeMap[key]) {
+                        await saveToIndexedDB(storeMap[key], key, data);
+                    }
+                }
+                
+                // Also save to localStorage as backup
+                localStorage.setItem(key, JSON.stringify(data));
+                console.log(`✅ Salvo em IndexedDB: ${key}`);
+            } catch (error) {
+                console.error(`Erro ao salvar ${key}:`, error);
+                // Try localStorage only
+                try {
+                    localStorage.setItem(key, JSON.stringify(data));
+                    console.log(`✅ Salvo em localStorage (fallback): ${key}`);
+                } catch (e) {
+                    if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+                        alert('⚠️ Espaço de armazenamento CHEIO!\n\nAbra o gerenciador de Storage (botão 📊 no menu) para limpar dados manualmente.');
+                    } else {
+                        alert('Erro ao salvar dados: ' + e.message);
+                    }
                 }
             }
         }
         
-        exercises.forEach(ex => {
-            if (!ex.createdAt) ex.createdAt = ex.updatedAt || new Date().toISOString();
-            if (!ex.category) ex.category = 'Matemática';
-            if (ex.alternatives && ex.alternatives.length > 0 && ex.correctIndex === undefined) {
-                ex.correctIndex = 0;
-            }
-            if (!ex.done) ex.done = false;
-            if (!ex.favorite) ex.favorite = false;
-            // Initialize status for new field
-            if (!ex.status) {
-                ex.status = ex.done ? 'done' : 'not-done';
-            }
-        });
+        // Legacy function for compatibility
+        function saveToLocalStorage(key, data) {
+            return saveToStorage(key, data);
+        }
+
         let currentAnnotationIndex = null;
         let editingIndex = null;
         let currentCategory = 'Todos';
@@ -1451,18 +1673,31 @@
             return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
         }
         
-        function updateStorageInfo() {
-            const totalSize = calculateStorageSize();
+        async function updateStorageInfo() {
+            const localStorageSize = calculateStorageSize();
             const usedStorageSpan = document.getElementById('usedStorage');
             const totalExercisesSpan = document.getElementById('totalExercises');
             const avgSizeSpan = document.getElementById('avgSize');
             
-            usedStorageSpan.textContent = formatBytes(totalSize);
+            // Calculate IndexedDB size
+            let indexedDBSize = 0;
+            if (exercises.length > 0) {
+                indexedDBSize = JSON.stringify(exercises).length;
+                indexedDBSize += JSON.stringify(stats).length;
+                indexedDBSize += JSON.stringify(timers).length;
+                indexedDBSize += JSON.stringify(simuladoHistory).length;
+            }
+            
+            const totalSize = localStorageSize + indexedDBSize;
+            usedStorageSpan.innerHTML = `
+                <strong>localStorage:</strong> ${formatBytes(localStorageSize)}<br>
+                <strong>IndexedDB:</strong> ${formatBytes(indexedDBSize)}<br>
+                <strong>Total:</strong> ${formatBytes(totalSize)}
+            `;
             totalExercisesSpan.textContent = exercises.length;
             
             if (exercises.length > 0) {
-                const exercisesSize = JSON.stringify(exercises).length;
-                const avgSize = Math.round(exercisesSize / exercises.length);
+                const avgSize = Math.round(indexedDBSize / exercises.length);
                 avgSizeSpan.textContent = formatBytes(avgSize);
             } else {
                 avgSizeSpan.textContent = '0 KB';
@@ -1478,7 +1713,7 @@
         
         document.getElementById('calculateStorageBtn').addEventListener('click', updateStorageInfo);
         
-        document.getElementById('cleanupStorageBtn').addEventListener('click', () => {
+        document.getElementById('cleanupStorageBtn').addEventListener('click', async () => {
             const clearExercises = document.getElementById('clearExercises').checked;
             const clearStats = document.getElementById('clearStats').checked;
             const clearSimulado = document.getElementById('clearSimulado').checked;
@@ -1493,18 +1728,22 @@
                 if (clearExercises) {
                     exercises = [];
                     localStorage.removeItem('exercises');
+                    if (db) clearIndexedDBStore(STORES.exercises);
                 }
                 if (clearStats) {
                     stats = {};
                     localStorage.removeItem('stats');
+                    if (db) clearIndexedDBStore(STORES.stats);
                 }
                 if (clearSimulado) {
                     simuladoHistory = [];
                     localStorage.removeItem('simuladoHistory');
+                    if (db) clearIndexedDBStore(STORES.simuladoHistory);
                 }
                 if (clearTimers) {
                     timers = {};
                     localStorage.removeItem('timers');
+                    if (db) clearIndexedDBStore(STORES.timers);
                 }
                 
                 alert('✅ Dados limpos com sucesso!');
@@ -1594,7 +1833,7 @@
         let selectedImages = [];
         let isProcessing = false;
         
-        // Compress image to reduce storage size
+        // Compress image to reduce storage size - intelligently based on size
         function compressImage(dataUrl, quality = 0.7) {
             return new Promise((resolve) => {
                 const img = new Image();
@@ -1602,9 +1841,31 @@
                     const canvas = document.createElement('canvas');
                     let width = img.width;
                     let height = img.height;
+                    let finalQuality = quality;
                     
-                    // Resize if too large (max 1200px width)
-                    const maxWidth = 1200;
+                    // Calculate original size (rough estimate)
+                    const originalSize = dataUrl.length;
+                    
+                    // Adaptive compression based on original size
+                    if (originalSize > 5000000) {
+                        // >5MB: aggressive compression
+                        finalQuality = 0.4;
+                    } else if (originalSize > 2000000) {
+                        // >2MB: strong compression
+                        finalQuality = 0.5;
+                    } else if (originalSize > 1000000) {
+                        // >1MB: normal compression
+                        finalQuality = 0.6;
+                    }
+                    
+                    // Resize if too large (adaptive based on original dimensions)
+                    let maxWidth = 1200;
+                    if (width > 4000 || height > 4000) {
+                        maxWidth = 800;  // Very large images -> smaller
+                    } else if (width > 2000 || height > 2000) {
+                        maxWidth = 1024; // Large images
+                    }
+                    
                     if (width > maxWidth) {
                         height = (height * maxWidth) / width;
                         width = maxWidth;
@@ -1616,8 +1877,18 @@
                     ctx.drawImage(img, 0, 0, width, height);
                     
                     // Convert to JPEG with compression
-                    const compressedUrl = canvas.toDataURL('image/jpeg', quality);
+                    const compressedUrl = canvas.toDataURL('image/jpeg', finalQuality);
+                    
+                    // Log compression ratio
+                    const compressedSize = compressedUrl.length;
+                    const ratio = Math.round((1 - compressedSize / originalSize) * 100);
+                    console.log(`📸 Imagem comprimida: ${ratio}% menor (${(originalSize/1024/1024).toFixed(2)}MB → ${(compressedSize/1024/1024).toFixed(2)}MB)`);
+                    
                     resolve(compressedUrl);
+                };
+                img.onerror = function() {
+                    console.error('Erro ao carregar imagem para compressão');
+                    resolve(dataUrl); // Fallback to original if compression fails
                 };
                 img.src = dataUrl;
             });
