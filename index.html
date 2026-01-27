@@ -414,6 +414,45 @@
             text-decoration: line-through;
             color: gray;
         }
+        .multi-image-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            gap: 10px;
+        }
+        .multi-image-item:last-child {
+            border-bottom: none;
+        }
+        .multi-image-thumbnail {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .multi-image-info {
+            flex: 1;
+        }
+        .multi-image-info input {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+        .multi-image-remove {
+            background: #dc3545;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .multi-image-remove:hover {
+            background: #c82333;
+        }
         .rasurar-btn {
             margin-right: 5px;
             background: none;
@@ -885,6 +924,8 @@
       <button id="exportBtn">Exportar Dados</button>
       <br><br>
       <button id="importBtn">Importar Dados</button>
+      <br><br>
+      <button id="storageBtn" style="background: #ff9800; color: white;">📊 Storage</button>
     </nav>
   </aside>
   <main class="main-content">
@@ -1033,8 +1074,14 @@
         <option value="Estatística">Estatística</option>
       </select>
 
-      <label for="image">Upload da Foto (opcional, ou cole com Ctrl+V):</label>
-      <input type="file" id="image" accept="image/*">
+      <label for="image">Upload de Fotos (opcional - múltiplas imagens permitidas, ou cole com Ctrl+V):</label>
+      <input type="file" id="image" accept="image/*" multiple>
+      
+      <div id="multiImagePreview" style="display:none; margin-top: 15px;">
+        <h3>Imagens Selecionadas:</h3>
+        <div id="imagesList" style="border: 1px solid #ddd; border-radius: 8px; padding: 10px; max-height: 300px; overflow-y: auto;"></div>
+        <button type="button" id="clearImagesBtn" style="margin-top: 10px;">Limpar Imagens</button>
+      </div>
 
       <label for="exerciseText">Texto do Exercício (opcional, use HTML para hyperlinks):</label>
       <textarea id="exerciseText" rows="5"></textarea>
@@ -1054,7 +1101,15 @@
         <option value="">Selecione</option>
       </select>
 
-      <button type="submit" id="submitBtn">Salvar Exercício</button>
+      <button type="submit" id="submitBtn">Salvar Exercício(s)</button>
+      
+      <!-- Progress bar for multiple uploads -->
+      <div id="uploadProgress" style="display:none; margin-top: 15px;">
+        <div style="background: #f0f0f0; border-radius: 5px; overflow: hidden; height: 25px;">
+          <div id="progressBar" style="background: linear-gradient(90deg, #1DA1F2, #1991DB); height: 100%; width: 0%; transition: width 0.3s ease; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold;">0%</div>
+        </div>
+        <p id="uploadStatus" style="text-align: center; font-size: 14px; margin-top: 10px; color: #666;">Carregando...</p>
+      </div>
     </form>
   </div>
 </div>
@@ -1092,6 +1147,41 @@
             <button id="clearTagFilter" style="margin-bottom:8px;">Mostrar todas</button>
         </div>
         <div id="tagsList" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+    </div>
+</div>
+
+<!-- Modal for storage -->
+<div id="storageModal" class="modal">
+    <div class="modal-content">
+        <span class="close" id="closeStorageModal">&times;</span>
+        <h2>📊 Gerenciador de Storage</h2>
+        <div id="storageInfo" style="margin: 20px 0; padding: 15px; background: #f0f0f0; border-radius: 8px;">
+            <p><strong>Espaço Usado:</strong> <span id="usedStorage">Calculando...</span></p>
+            <p><strong>Espaço Disponível:</strong> ~5-10 MB (localStorage)</p>
+            <p><strong>Total de Exercícios:</strong> <span id="totalExercises">0</span></p>
+            <p><strong>Tamanho Médio por Exercício:</strong> <span id="avgSize">0</span> KB</p>
+        </div>
+        
+        <h3>Limpeza Manual</h3>
+        <div style="margin: 15px 0;">
+            <label style="display: block; margin-bottom: 10px;">
+                <input type="checkbox" id="clearExercises"> Limpar todos os exercícios
+            </label>
+            <label style="display: block; margin-bottom: 10px;">
+                <input type="checkbox" id="clearStats"> Limpar estatísticas
+            </label>
+            <label style="display: block; margin-bottom: 10px;">
+                <input type="checkbox" id="clearSimulado"> Limpar histórico de simulados
+            </label>
+            <label style="display: block; margin-bottom: 10px;">
+                <input type="checkbox" id="clearTimers"> Limpar timers
+            </label>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <button id="calculateStorageBtn" style="background: #2196F3; color: white; padding: 10px 15px; margin-right: 10px; border: none; border-radius: 5px; cursor: pointer;">Recalcular</button>
+            <button id="cleanupStorageBtn" style="background: #ff5722; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer;">🗑️ Limpar Selecionados</button>
+        </div>
     </div>
 </div>
 
@@ -1162,6 +1252,21 @@
         let stats = JSON.parse(localStorage.getItem('stats')) || {};
         let timers = JSON.parse(localStorage.getItem('timers')) || {};
         let simuladoHistory = JSON.parse(localStorage.getItem('simuladoHistory')) || [];
+        
+        // Helper function to save with error handling
+        function saveToLocalStorage(key, data) {
+            try {
+                localStorage.setItem(key, JSON.stringify(data));
+            } catch (error) {
+                if (error.name === 'QuotaExceededError' || error.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+                    alert('⚠️ Espaço de armazenamento CHEIO!\n\nAbra o gerenciador de Storage (botão 📊 no menu) para limpar dados manualmente.');
+                } else {
+                    console.error('Erro ao salvar:', error);
+                    alert('Erro ao salvar dados: ' + error.message);
+                }
+            }
+        }
+        
         exercises.forEach(ex => {
             if (!ex.createdAt) ex.createdAt = ex.updatedAt || new Date().toISOString();
             if (!ex.category) ex.category = 'Matemática';
@@ -1323,6 +1428,94 @@
         closeTagsModal.addEventListener('click', () => closeModalWindow(tagsModal));
         clearTagFilter.addEventListener('click', () => { searchInput.value = ''; searchTerm = ''; closeModalWindow(tagsModal); currentPage = 1; showExercises(); });
 
+        // Storage Management
+        const storageBtn = document.getElementById('storageBtn');
+        const storageModal = document.getElementById('storageModal');
+        const closeStorageModal = document.getElementById('closeStorageModal');
+        
+        function calculateStorageSize() {
+            let total = 0;
+            for (let key in localStorage) {
+                if (localStorage.hasOwnProperty(key)) {
+                    total += localStorage[key].length;
+                }
+            }
+            return total;
+        }
+        
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+        }
+        
+        function updateStorageInfo() {
+            const totalSize = calculateStorageSize();
+            const usedStorageSpan = document.getElementById('usedStorage');
+            const totalExercisesSpan = document.getElementById('totalExercises');
+            const avgSizeSpan = document.getElementById('avgSize');
+            
+            usedStorageSpan.textContent = formatBytes(totalSize);
+            totalExercisesSpan.textContent = exercises.length;
+            
+            if (exercises.length > 0) {
+                const exercisesSize = JSON.stringify(exercises).length;
+                const avgSize = Math.round(exercisesSize / exercises.length);
+                avgSizeSpan.textContent = formatBytes(avgSize);
+            } else {
+                avgSizeSpan.textContent = '0 KB';
+            }
+        }
+        
+        storageBtn.addEventListener('click', () => {
+            updateStorageInfo();
+            openModal(storageModal);
+        });
+        
+        closeStorageModal.addEventListener('click', () => closeModalWindow(storageModal));
+        
+        document.getElementById('calculateStorageBtn').addEventListener('click', updateStorageInfo);
+        
+        document.getElementById('cleanupStorageBtn').addEventListener('click', () => {
+            const clearExercises = document.getElementById('clearExercises').checked;
+            const clearStats = document.getElementById('clearStats').checked;
+            const clearSimulado = document.getElementById('clearSimulado').checked;
+            const clearTimers = document.getElementById('clearTimers').checked;
+            
+            if (!clearExercises && !clearStats && !clearSimulado && !clearTimers) {
+                alert('Selecione pelo menos um item para limpar!');
+                return;
+            }
+            
+            if (confirm('Tem certeza? Esta ação não pode ser desfeita!')) {
+                if (clearExercises) {
+                    exercises = [];
+                    localStorage.removeItem('exercises');
+                }
+                if (clearStats) {
+                    stats = {};
+                    localStorage.removeItem('stats');
+                }
+                if (clearSimulado) {
+                    simuladoHistory = [];
+                    localStorage.removeItem('simuladoHistory');
+                }
+                if (clearTimers) {
+                    timers = {};
+                    localStorage.removeItem('timers');
+                }
+                
+                alert('✅ Dados limpos com sucesso!');
+                updateStorageInfo();
+                if (clearExercises) {
+                    displayExercises();
+                    closeModalWindow(storageModal);
+                }
+            }
+        });
+
         const simuladoForm = document.getElementById('simuladoForm');
 
         closeSimuladoModal.addEventListener('click', () => closeModalWindow(simuladoModal));
@@ -1397,12 +1590,158 @@
             }
         }
 
+        // Multi-image storage
+        let selectedImages = [];
+        let isProcessing = false;
+        
+        // Compress image to reduce storage size
+        function compressImage(dataUrl, quality = 0.7) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    // Resize if too large (max 1200px width)
+                    const maxWidth = 1200;
+                    if (width > maxWidth) {
+                        height = (height * maxWidth) / width;
+                        width = maxWidth;
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // Convert to JPEG with compression
+                    const compressedUrl = canvas.toDataURL('image/jpeg', quality);
+                    resolve(compressedUrl);
+                };
+                img.src = dataUrl;
+            });
+        }
+        
+        // Handle multiple image selection
+        const imageInput = document.getElementById('image');
+        imageInput.addEventListener('change', function(e) {
+            if (isProcessing) return; // Prevent concurrent processing
+            
+            selectedImages = [];
+            const files = Array.from(e.target.files);
+            const imagesList = document.getElementById('imagesList');
+            imagesList.innerHTML = '';
+            
+            if (files.length > 0) {
+                document.getElementById('multiImagePreview').style.display = 'block';
+                let loadedCount = 0;
+                
+                files.forEach((file, index) => {
+                    const reader = new FileReader();
+                    reader.onload = async function(event) {
+                        // Compress the image
+                        const compressedData = await compressImage(event.target.result, 0.6);
+                        
+                        selectedImages[index] = {
+                            file: file,
+                            data: compressedData,
+                            title: file.name.replace(/\.[^/.]+$/, '')
+                        };
+                        
+                        loadedCount++;
+                        // Only update preview when all images are loaded
+                        if (loadedCount === files.length) {
+                            updateImagePreview();
+                        }
+                    };
+                    reader.onerror = function() {
+                        console.error('Erro ao carregar imagem:', file.name);
+                        loadedCount++;
+                    };
+                    reader.readAsDataURL(file);
+                });
+            } else {
+                document.getElementById('multiImagePreview').style.display = 'none';
+            }
+        });
+        
+        function updateImagePreview() {
+            const imagesList = document.getElementById('imagesList');
+            imagesList.innerHTML = '';
+            
+            // Filter out empty entries
+            const validImages = selectedImages.filter(img => img !== undefined);
+            
+            validImages.forEach((img, displayIndex) => {
+                const actualIndex = selectedImages.indexOf(img);
+                if (img) {
+                    const div = document.createElement('div');
+                    div.className = 'multi-image-item';
+                    div.innerHTML = `
+                        <img src="${img.data}" class="multi-image-thumbnail" alt="preview">
+                        <div class="multi-image-info">
+                            <input type="text" class="image-title-input" data-index="${actualIndex}" placeholder="Título da imagem" value="${img.title}">
+                        </div>
+                        <button type="button" class="multi-image-remove" data-index="${actualIndex}">Remover</button>
+                    `;
+                    
+                    div.querySelector('.image-title-input').addEventListener('change', function() {
+                        const idx = parseInt(this.getAttribute('data-index'));
+                        if (selectedImages[idx]) {
+                            selectedImages[idx].title = this.value || selectedImages[idx].file.name.replace(/\.[^/.]+$/, '');
+                        }
+                    });
+                    
+                    div.querySelector('.multi-image-remove').addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const idx = parseInt(this.getAttribute('data-index'));
+                        removeImage(idx);
+                    });
+                    
+                    imagesList.appendChild(div);
+                }
+            });
+        }
+        
+        function removeImage(index) {
+            selectedImages[index] = undefined;
+            const validImages = selectedImages.filter(img => img !== undefined);
+            
+            if (validImages.length === 0) {
+                selectedImages = [];
+                imageInput.value = '';
+                document.getElementById('multiImagePreview').style.display = 'none';
+            } else {
+                selectedImages = validImages;
+                updateImagePreview();
+            }
+        }
+        
+        const clearImagesBtn = document.getElementById('clearImagesBtn');
+        if (clearImagesBtn) {
+            clearImagesBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                selectedImages = [];
+                imageInput.value = '';
+                document.getElementById('multiImagePreview').style.display = 'none';
+            });
+        }
+
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            let title = document.getElementById('title').value.trim();
+            
+            // Prevent duplicate submissions
+            if (isProcessing) {
+                return;
+            }
+            
+            isProcessing = true;
+            submitBtn.disabled = true;
+            
+            let baseTitle = document.getElementById('title').value.trim();
             const difficulty = document.getElementById('difficulty').value;
             const category = document.getElementById('category').value;
-            const imageInput = document.getElementById('image');
             const answerImageInput = document.getElementById('answerImage');
             const exerciseText = document.getElementById('exerciseText').value;
             const tagsInput = document.getElementById('tags').value;
@@ -1410,73 +1749,169 @@
             const alternatives = Array.from(alternativesContainer.querySelectorAll('input')).map(input => input.value.trim()).filter(val => val);
             const correctIndex = alternatives.length > 0 ? parseInt(document.getElementById('correctAlt').value) || 0 : null;
 
-            // If no title provided, use image filename
-            if (!title && imageInput.files[0]) {
-                title = imageInput.files[0].name.replace(/\.[^/.]+$/, ''); // Remove file extension
-            }
-
             // Validation
             if (!difficulty || !category) {
-                alert('Título, dificuldade e categoria são obrigatórios.');
+                alert('Dificuldade e categoria são obrigatórios.');
+                isProcessing = false;
+                submitBtn.disabled = false;
                 return;
             }
 
-            let imageData = null;
-            let answerImageData = null;
-            let filesToRead = 0;
-            if (imageInput.files[0]) filesToRead++;
-            if (answerImageInput.files[0]) filesToRead++;
+            // Filter out undefined entries from selectedImages
+            const validImages = selectedImages.filter(img => img !== undefined);
 
-            if (filesToRead === 0) {
-                saveExercise(title, difficulty, category, imageData, exerciseText, answerImageData, alternatives, correctIndex, tags);
-            } else {
-                if (imageInput.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        imageData = event.target.result;
-                        filesToRead--;
-                        if (filesToRead === 0) saveExercise(title, difficulty, category, imageData, exerciseText, answerImageData, alternatives, correctIndex, tags);
-                    };
-                    reader.readAsDataURL(imageInput.files[0]);
-                }
+            // If no images and no title, return
+            if (validImages.length === 0 && !baseTitle) {
+                alert('Por favor, adicione pelo menos um título ou uma imagem.');
+                isProcessing = false;
+                submitBtn.disabled = false;
+                return;
+            }
+
+            // If we have multiple images, save each one separately
+            if (validImages.length > 0) {
+                const progressDiv = document.getElementById('uploadProgress');
+                const progressBar = document.getElementById('progressBar');
+                const uploadStatus = document.getElementById('uploadStatus');
+                
+                progressDiv.style.display = 'block';
+                progressBar.style.width = '0%';
+                progressBar.textContent = '0%';
+                
+                // Read answer image first if exists
+                let answerImageData = null;
                 if (answerImageInput.files[0]) {
-                    const reader2 = new FileReader();
-                    reader2.onload = function(event) {
-                        answerImageData = event.target.result;
-                        filesToRead--;
-                        if (filesToRead === 0) saveExercise(title, difficulty, category, imageData, exerciseText, answerImageData, alternatives, correctIndex, tags);
+                    const reader = new FileReader();
+                    reader.onload = async function(event) {
+                        // Compress answer image too
+                        answerImageData = await compressImage(event.target.result, 0.6);
+                        saveMultipleImages(validImages, baseTitle, difficulty, category, exerciseText, answerImageData, alternatives, correctIndex, tags, progressBar, uploadStatus);
                     };
-                    reader2.readAsDataURL(answerImageInput.files[0]);
+                    reader.onerror = function() {
+                        alert('Erro ao carregar imagem de resposta');
+                        isProcessing = false;
+                        submitBtn.disabled = false;
+                        progressDiv.style.display = 'none';
+                    };
+                    reader.readAsDataURL(answerImageInput.files[0]);
+                } else {
+                    // No answer image, start saving directly
+                    saveMultipleImages(validImages, baseTitle, difficulty, category, exerciseText, null, alternatives, correctIndex, tags, progressBar, uploadStatus);
+                }
+            } else {
+                // Single exercise with no images
+                let answerImageData = null;
+                let filesToRead = answerImageInput.files[0] ? 1 : 0;
+                
+                if (filesToRead === 0) {
+                    saveExercise(baseTitle, difficulty, category, null, exerciseText, answerImageData, alternatives, correctIndex, tags);
+                    isProcessing = false;
+                    submitBtn.disabled = false;
+                } else {
+                    const reader = new FileReader();
+                    reader.onload = async function(event) {
+                        // Compress answer image too
+                        answerImageData = await compressImage(event.target.result, 0.6);
+                        saveExercise(baseTitle, difficulty, category, null, exerciseText, answerImageData, alternatives, correctIndex, tags);
+                        isProcessing = false;
+                        submitBtn.disabled = false;
+                    };
+                    reader.onerror = function() {
+                        alert('Erro ao carregar imagem de resposta');
+                        isProcessing = false;
+                        submitBtn.disabled = false;
+                    };
+                    reader.readAsDataURL(answerImageInput.files[0]);
                 }
             }
         });
+        
+        function saveMultipleImages(images, baseTitle, difficulty, category, exerciseText, answerImageData, alternatives, correctIndex, tags, progressBar, uploadStatus) {
+            // Filter only valid images for counting
+            const validImages = images.filter(img => img && img.data);
+            const total = validImages.length;
+            let savedCount = 0;
+            
+            if (total === 0) {
+                isProcessing = false;
+                submitBtn.disabled = false;
+                return;
+            }
+            
+            validImages.forEach((img, index) => {
+                const title = img.title || baseTitle || `Exercício ${index + 1}`;
+                
+                // Use Promise to ensure proper sequencing
+                Promise.resolve().then(() => {
+                    return new Promise((resolve) => {
+                        setTimeout(() => {
+                            saveExercise(title, difficulty, category, img.data, exerciseText, answerImageData, alternatives, correctIndex, tags);
+                            
+                            savedCount++;
+                            const percentage = Math.round((savedCount / total) * 100);
+                            progressBar.style.width = percentage + '%';
+                            progressBar.textContent = percentage + '%';
+                            uploadStatus.textContent = `${savedCount} de ${total} imagem(ns) carregada(s)...`;
+                            
+                            console.log(`Salvando imagem ${savedCount} de ${total}`);
+                            
+                            if (savedCount === total) {
+                                setTimeout(() => {
+                                    document.getElementById('uploadProgress').style.display = 'none';
+                                    progressBar.style.width = '0%';
+                                    progressBar.textContent = '0%';
+                                    uploadStatus.textContent = 'Carregando...';
+                                    isProcessing = false;
+                                    submitBtn.disabled = false;
+                                    console.log('Upload concluído!');
+                                }, 500);
+                            }
+                            
+                            resolve();
+                        }, index * 200); // Increased delay for better visibility
+                    });
+                });
+            });
+        }
 
         function saveExercise(title, difficulty, category, imageData, exerciseText, answerImageData, alternatives, correctIndex, tags = []) {
-            const now = new Date().toISOString();
-            const exercise = {
-                title,
-                difficulty,
-                category,
-                image: imageData,
-                text: exerciseText,
-                answerImage: answerImageData,
-                alternatives,
-                correctIndex,
-                annotations: '',
-                tags,
-                status: 'not-done',
-                done: false,
-                favorite: false,
-                createdAt: now,
-                updatedAt: now
-            };
-            exercises.push(exercise);
-            localStorage.setItem('exercises', JSON.stringify(exercises));
-            displayExercises();
-            form.reset();
-            alternativesContainer.innerHTML = '';
-            updateCorrectAltOptions();
-            closeModalWindow(newModal);
+            try {
+                const now = new Date().toISOString();
+                const exercise = {
+                    title,
+                    difficulty,
+                    category,
+                    image: imageData,
+                    text: exerciseText,
+                    answerImage: answerImageData,
+                    alternatives,
+                    correctIndex,
+                    annotations: '',
+                    tags,
+                    status: 'not-done',
+                    done: false,
+                    favorite: false,
+                    createdAt: now,
+                    updatedAt: now
+                };
+                exercises.push(exercise);
+                saveToLocalStorage('exercises', exercises);
+                displayExercises();
+                
+                // Reset form and state (only on first call, not on multiple)
+                if (selectedImages.length === 0 && !isProcessing) {
+                    form.reset();
+                    alternativesContainer.innerHTML = '';
+                    updateCorrectAltOptions();
+                    document.getElementById('multiImagePreview').style.display = 'none';
+                    imageInput.value = '';
+                }
+                
+                console.log('Exercício salvo:', title);
+            } catch (error) {
+                console.error('Erro ao salvar exercício:', error);
+                alert('Erro ao salvar exercício. Verifique o console.');
+            }
         }
 
         function displayExercises() {
@@ -2436,7 +2871,7 @@
             modalOverlay.classList.remove('active');
         });
 
-        document.querySelectorAll('.category-btn, .stats-btn, .simulado-btn, #tagsBtn, #exportBtn, #importBtn').forEach(btn => {
+        document.querySelectorAll('.category-btn, .stats-btn, .simulado-btn, #tagsBtn, #exportBtn, #importBtn, #storageBtn').forEach(btn => {
             btn.addEventListener('click', () => {
                 leftSidebar.classList.remove('active');
                 modalOverlay.classList.remove('active');
