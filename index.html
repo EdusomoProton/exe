@@ -18,6 +18,25 @@
             padding: 10px 20px;
             border-bottom: 1px solid #ddd;
             background: #fff;
+            position: relative;
+            z-index: 99;
+        }
+        .hamburger-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #1DA1F2;
+            margin-right: 15px;
+        }
+        .hamburger-btn:hover {
+            color: #1991DB;
+        }
+        @media (max-width: 768px) {
+            .hamburger-btn {
+                display: block;
+            }
         }
         .logo {
             font-size: 24px;
@@ -45,6 +64,23 @@
             padding: 20px;
             border-right: 1px solid #ddd;
             background: #f8f9fa;
+            overflow-y: auto;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        @media (max-width: 768px) {
+            .left-sidebar {
+                position: fixed;
+                left: 0;
+                top: 60px;
+                height: calc(100vh - 60px);
+                width: 250px;
+                transform: translateX(-100%);
+                box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+                z-index: 98;
+            }
+            .left-sidebar.active {
+                transform: translateX(0);
+            }
         }
         .left-sidebar nav button {
             display: block;
@@ -71,10 +107,22 @@
             overflow-y: auto;
             background: #fff;
         }
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 15px;
+            }
+        }
         .compose {
             display: flex;
             align-items: center;
             margin-bottom: 20px;
+            gap: 10px;
+        }
+        @media (max-width: 768px) {
+            .compose {
+                flex-direction: column;
+                align-items: stretch;
+            }
         }
         .compose button {
             background: #1DA1F2;
@@ -83,7 +131,6 @@
             padding: 10px 20px;
             border-radius: 20px;
             cursor: pointer;
-            margin-right: 20px;
         }
         .compose button:hover {
             background: #1991DB;
@@ -92,12 +139,30 @@
             display: flex;
             gap: 10px;
         }
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+            }
+        }
         .controls select {
             padding: 8px;
             border-radius: 5px;
             border: 1px solid #ddd;
             background: #fff;
             color: #000;
+        }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.3);
+            z-index: 97;
+        }
+        .modal-overlay.active {
+            display: block;
         }
         fieldset {
             border: 1px solid #ddd;
@@ -206,6 +271,14 @@
             background: #dc3545;
             color: #fff;
         }
+        .feito-btn.in-progress {
+            background: #ffc107;
+            color: #000;
+        }
+        .feito-btn.in-progress:hover {
+            background: #e0a800;
+            color: #000;
+        }
         .feito-btn.done {
             background: #28a745;
             color: #fff;
@@ -278,6 +351,12 @@
             max-height: 80vh;
             overflow-y: auto;
         }
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 90%;
+                max-width: 100%;
+            }
+        }
         .close {
             color: #aaa;
             float: right;
@@ -301,6 +380,7 @@
             border-radius: 5px;
             background: #fff;
             color: #000;
+            box-sizing: border-box;
         }
         .modal-content button {
             margin-top: 10px;
@@ -698,20 +778,97 @@
         .delete-simulado-btn:hover {
             background: #c82333;
         }
+        .random-mode-btn {
+            background: #6c757d;
+            color: #fff;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .random-mode-btn:hover {
+            background: #5a6268;
+        }
+        .random-mode-btn.active {
+            background: #28a745;
+        }
+        .random-exercise-container {
+            display: none;
+            border: 2px solid #1DA1F2;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #f0f8ff;
+        }
+        .random-exercise-container.show {
+            display: block;
+        }
+        .random-exercise-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .random-exercise-header h3 {
+            margin: 0;
+            color: #1DA1F2;
+        }
+        .random-close-btn {
+            background: #dc3545;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .random-close-btn:hover {
+            background: #c82333;
+        }
+        .random-exercise-nav {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .random-nav-btn {
+            background: #1DA1F2;
+            color: #fff;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .random-nav-btn:hover {
+            background: #1991DB;
+        }
+        .random-nav-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .random-counter {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
 <header>
+  <button class="hamburger-btn" id="hamburgerBtn">☰</button>
   <div class="logo"><img src="favicon.png" alt="Logo" style="height: 24px; margin-right: 10px;">App de Exercícios</div>
   <div class="search">
     <input type="text" id="searchInput" class="search-input" placeholder="Buscar por categoria ou #tag (ex: #Modelo AK, Microeconomia)">
   </div>
-  <div class="user-menu">
-    <!-- User menu placeholder -->
-  </div>
+  <button class="random-mode-btn" id="randomModeBtn" title="Modo Aleatório">🎲 Aleatório</button>
 </header>
+
+<div class="modal-overlay" id="modalOverlay"></div>
+
 <div class="layout">
-  <aside class="left-sidebar">
+  <aside class="left-sidebar" id="leftSidebar">
     <nav>
       <button class="category-btn active" data-category="Todos">Todos</button>
       <button class="category-btn" data-category="Matemática">Matemática</button>
@@ -723,14 +880,30 @@
       <br><br>
       <button class="simulado-btn" id="simuladoBtn">Simulado</button>
       <br><br>
+      <button class="stats-btn" id="tagsBtn">Etiquetas</button>
+      <br><br>
       <button id="exportBtn">Exportar Dados</button>
       <br><br>
       <button id="importBtn">Importar Dados</button>
     </nav>
   </aside>
   <main class="main-content">
-    <div class="compose">
-      <button class="new-exercise-btn" id="newExerciseBtn">Novo Exercício</button>
+        <div class="random-exercise-container" id="randomExerciseContainer">
+            <div class="random-exercise-header">
+                <h3>🎲 Modo Aleatório</h3>
+                <button class="random-close-btn" id="closeRandomBtn">Fechar</button>
+            </div>
+            <div id="randomExerciseContent"></div>
+            <div class="random-exercise-nav">
+                <button class="random-nav-btn" id="prevRandomBtn">← Anterior</button>
+                <button class="random-nav-btn" id="nextRandomBtn">Próximo →</button>
+            </div>
+            <div class="random-counter">
+                <span id="randomCounter">0/0</span>
+            </div>
+        </div>
+        <div class="compose">
+            <button class="new-exercise-btn" id="newExerciseBtn">Novo Exercício</button>
       <div class="controls">
         <select id="sortSelect" class="sort-select">
           <option value="recent">Mais recentes</option>
@@ -741,6 +914,7 @@
         <select id="statusSelect" class="status-select">
           <option value="all">Todos</option>
           <option value="done">Feitos</option>
+          <option value="in-progress">Em Progresso</option>
           <option value="not-done">Não Feitos</option>
           <option value="favorites">Favoritos</option>
         </select>
@@ -840,7 +1014,7 @@
     <h2>Novo Exercício</h2>
     <form id="exerciseForm">
       <label for="title">Título do Exercício:</label>
-      <input type="text" id="title" required>
+      <input type="text" id="title">
 
       <label for="difficulty">Dificuldade:</label>
       <select id="difficulty" required>
@@ -909,6 +1083,18 @@
   </div>
 </div>
 
+<!-- Modal for tags -->
+<div id="tagsModal" class="modal">
+    <div class="modal-content">
+        <span class="close" id="closeTagsModal">&times;</span>
+        <h2>Etiquetas</h2>
+        <div style="margin-top:10px; margin-bottom:10px;">
+            <button id="clearTagFilter" style="margin-bottom:8px;">Mostrar todas</button>
+        </div>
+        <div id="tagsList" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+    </div>
+</div>
+
 <!-- Modal for new simulado -->
 <div id="simuladoModal" class="modal">
   <div class="modal-content">
@@ -954,6 +1140,14 @@
           <label for="simuladoTag">Etiquetas (#, separadas por vírgula, opcional):</label>
           <input type="text" id="simuladoTag" placeholder="#Tag1, #Tag2">
         </div>
+                <div class="filter-group">
+                    <label for="simuladoStatus">Status do Exercício:</label>
+                    <select id="simuladoStatus">
+                        <option value="all">Todos</option>
+                        <option value="done">Concluídos</option>
+                        <option value="not-done">Não Concluídos</option>
+                    </select>
+                </div>
       </fieldset>
       
       <button type="button" id="startSimulado">Iniciar Simulado</button>
@@ -976,6 +1170,10 @@
             }
             if (!ex.done) ex.done = false;
             if (!ex.favorite) ex.favorite = false;
+            // Initialize status for new field
+            if (!ex.status) {
+                ex.status = ex.done ? 'done' : 'not-done';
+            }
         });
         let currentAnnotationIndex = null;
         let editingIndex = null;
@@ -987,6 +1185,17 @@
         let activeTimers = {};
         let currentPage = 1;
         let pageSize = 10;
+        let currentRandomIndex = 0;
+        let randomExercises = [];
+        let isRandomMode = false;
+
+        const randomModeBtn = document.getElementById('randomModeBtn');
+        const randomExerciseContainer = document.getElementById('randomExerciseContainer');
+        const randomExerciseContent = document.getElementById('randomExerciseContent');
+        const closeRandomBtn = document.getElementById('closeRandomBtn');
+        const prevRandomBtn = document.getElementById('prevRandomBtn');
+        const nextRandomBtn = document.getElementById('nextRandomBtn');
+        const randomCounter = document.getElementById('randomCounter');
 
         function openModal(modal) {
             modal.style.display = 'block';
@@ -1039,6 +1248,11 @@
         const exportBtn = document.getElementById('exportBtn');
         const importBtn = document.getElementById('importBtn');
         const importFile = document.getElementById('importFile');
+        const tagsBtn = document.getElementById('tagsBtn');
+        const tagsModal = document.getElementById('tagsModal');
+        const closeTagsModal = document.getElementById('closeTagsModal');
+        const tagsList = document.getElementById('tagsList');
+        const clearTagFilter = document.getElementById('clearTagFilter');
 
         addAlternativeBtn.addEventListener('click', addAlternativeInput);
         editAddAlternativeBtn.addEventListener('click', addEditAlternativeInput);
@@ -1050,7 +1264,11 @@
                 document.getElementById('statsBtn').classList.remove('active');
                 currentCategory = btn.dataset.category;
                 currentPage = 1;
-                showExercises();
+                if (isRandomMode) {
+                    startRandomMode();
+                } else {
+                    showExercises();
+                }
             });
         });
 
@@ -1100,6 +1318,10 @@
         exportBtn.addEventListener('click', exportData);
         importBtn.addEventListener('click', () => importFile.click());
         importFile.addEventListener('change', importData);
+
+        tagsBtn.addEventListener('click', () => { displayTags(); openModal(tagsModal); });
+        closeTagsModal.addEventListener('click', () => closeModalWindow(tagsModal));
+        clearTagFilter.addEventListener('click', () => { searchInput.value = ''; searchTerm = ''; closeModalWindow(tagsModal); currentPage = 1; showExercises(); });
 
         const simuladoForm = document.getElementById('simuladoForm');
 
@@ -1177,7 +1399,7 @@
 
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            const title = document.getElementById('title').value;
+            let title = document.getElementById('title').value.trim();
             const difficulty = document.getElementById('difficulty').value;
             const category = document.getElementById('category').value;
             const imageInput = document.getElementById('image');
@@ -1188,8 +1410,13 @@
             const alternatives = Array.from(alternativesContainer.querySelectorAll('input')).map(input => input.value.trim()).filter(val => val);
             const correctIndex = alternatives.length > 0 ? parseInt(document.getElementById('correctAlt').value) || 0 : null;
 
+            // If no title provided, use image filename
+            if (!title && imageInput.files[0]) {
+                title = imageInput.files[0].name.replace(/\.[^/.]+$/, ''); // Remove file extension
+            }
+
             // Validation
-            if (!title || !difficulty || !category) {
+            if (!difficulty || !category) {
                 alert('Título, dificuldade e categoria são obrigatórios.');
                 return;
             }
@@ -1237,6 +1464,7 @@
                 correctIndex,
                 annotations: '',
                 tags,
+                status: 'not-done',
                 done: false,
                 favorite: false,
                 createdAt: now,
@@ -1267,8 +1495,10 @@
             let filteredIndices = [];
             exercises.forEach((exercise, index) => {
                 if (currentCategory !== 'Todos' && exercise.category !== currentCategory) return;
-                if (currentStatus === 'done' && !exercise.done) return;
-                if (currentStatus === 'not-done' && exercise.done) return;
+                const exerciseStatus = exercise.status || 'not-done';
+                if (currentStatus === 'done' && exerciseStatus !== 'done') return;
+                if (currentStatus === 'not-done' && exerciseStatus !== 'not-done') return;
+                if (currentStatus === 'in-progress' && exerciseStatus !== 'in-progress') return;
                 if (currentStatus === 'favorites' && !exercise.favorite) return;
                 if (searchTerm) {
                     const searchTerms = searchTerm.split(',').map(t => t.trim()).filter(t => t);
@@ -1337,7 +1567,7 @@
                     </div>
                     <div class="menu-container"><button class="menu-btn" onclick="toggleMenu(${index})">⋮</button><div class="dropdown-menu hidden" id="menu-${index}"><button class="edit-btn" onclick="editExercise(${index})">Editar</button><br><button class="delete-btn" onclick="deleteExercise(${index})">Excluir</button><br><button class="info-btn" onclick="showInfo(${index})">Info.</button></div></div>
                     <div class="tweet-actions">
-                        <button class="feito-btn ${exercise.done ? 'done' : ''}" onclick="toggleDone(${index})">Feito</button>
+                        <button class="feito-btn ${exercise.status || 'not-done'}" onclick="toggleDone(${index})" title="${exercise.status === 'done' ? 'Concluído' : exercise.status === 'in-progress' ? 'Em Progresso' : 'Não Feito'}">${exercise.status === 'done' ? '✓ Feito' : exercise.status === 'in-progress' ? '⊙ Incompleto' : 'Não Feito'}</button>
                     </div>
                 `;
                 exerciseList.appendChild(exerciseDiv);
@@ -1408,6 +1638,8 @@
                 }
             });
             renderPagination(totalPages);
+            // Update tag list (keeps modal in sync)
+            displayTags();
         }
 
         function renderPagination(totalPages) {
@@ -1456,7 +1688,17 @@
         }
 
         function toggleTimer(index) {
-            const timerSection = document.querySelector(`#exerciseList .tweet:nth-child(${index + 1}) .timer-section`);
+            let timerSection;
+            
+            // Check if we're in random mode
+            if (isRandomMode) {
+                timerSection = randomExerciseContent.querySelector('.timer-section');
+            } else {
+                timerSection = document.querySelector(`#exerciseList .tweet:nth-child(${index + 1}) .timer-section`);
+            }
+            
+            if (!timerSection) return;
+            
             const toggleBtn = timerSection.querySelector('.timer-toggle-btn');
             if (timerSection.classList.contains('collapsed')) {
                 timerSection.classList.remove('collapsed');
@@ -1525,7 +1767,12 @@
                 timers[index].history.push(timeEntry);
                 timers[index].current = 0;
                 localStorage.setItem('timers', JSON.stringify(timers));
-                displayExercises();
+                // Update the appropriate view based on mode
+                if (isRandomMode) {
+                    displayRandomExercise();
+                } else {
+                    displayExercises();
+                }
             }
         }
 
@@ -1534,7 +1781,12 @@
                 if (!timers[index]) timers[index] = { current: 0, history: [] };
                 timers[index].history.splice(timeIndex, 1);
                 localStorage.setItem('timers', JSON.stringify(timers));
-                displayExercises();
+                // Update the appropriate view based on mode
+                if (isRandomMode) {
+                    displayRandomExercise();
+                } else {
+                    displayExercises();
+                }
             }
         }
 
@@ -1596,8 +1848,52 @@
                 if (timers[index]) delete timers[index];
                 localStorage.setItem('exercises', JSON.stringify(exercises));
                 localStorage.setItem('timers', JSON.stringify(timers));
-                displayExercises();
+                if (isRandomMode) {
+                    closeRandomMode();
+                } else {
+                    displayExercises();
+                }
             }
+        }
+
+        function displayTags() {
+            if (!tagsList) return;
+            tagsList.innerHTML = '';
+            const allTags = exercises.flatMap(e => e.tags || []).map(t => t.trim()).filter(t => t);
+            if (allTags.length === 0) {
+                tagsList.innerHTML = '<div style="color:#666;">Nenhuma etiqueta encontrada.</div>';
+                return;
+            }
+            const counts = allTags.reduce((acc, t) => { acc[t] = (acc[t] || 0) + 1; return acc; }, {});
+            const unique = Object.keys(counts).sort((a,b) => counts[b] - counts[a] || a.localeCompare(b, 'pt-BR'));
+            unique.forEach(tag => {
+                const btn = document.createElement('button');
+                btn.className = 'menu-btn';
+                btn.style.padding = '6px 10px';
+                btn.style.borderRadius = '6px';
+                btn.style.display = 'flex';
+                btn.style.alignItems = 'center';
+                btn.style.gap = '8px';
+                const label = document.createElement('span');
+                label.textContent = tag;
+                const badge = document.createElement('span');
+                badge.textContent = counts[tag];
+                badge.style.background = '#e9ecef';
+                badge.style.padding = '2px 6px';
+                badge.style.borderRadius = '999px';
+                badge.style.fontSize = '12px';
+                badge.style.color = '#000';
+                btn.appendChild(label);
+                btn.appendChild(badge);
+                btn.addEventListener('click', () => {
+                    searchInput.value = tag;
+                    searchTerm = tag.toLowerCase();
+                    currentPage = 1;
+                    closeModalWindow(tagsModal);
+                    showExercises();
+                });
+                tagsList.appendChild(btn);
+            });
         }
 
         function showInfo(index) {
@@ -1631,14 +1927,34 @@
         function toggleFavorite(index) {
             exercises[index].favorite = !exercises[index].favorite;
             localStorage.setItem('exercises', JSON.stringify(exercises));
-            displayExercises();
+            if (isRandomMode) {
+                displayRandomExercise();
+            } else {
+                displayExercises();
+            }
         }
 
         function toggleDone(index) {
-            exercises[index].done = !exercises[index].done;
+            // Cycle through states: not-done -> in-progress -> done -> not-done
+            const currentStatus = exercises[index].status || 'not-done';
+            let newStatus = 'not-done';
+            if (currentStatus === 'not-done') {
+                newStatus = 'in-progress';
+            } else if (currentStatus === 'in-progress') {
+                newStatus = 'done';
+            } else if (currentStatus === 'done') {
+                newStatus = 'not-done';
+            }
+            exercises[index].status = newStatus;
+            // Keep done for backwards compatibility with stats
+            exercises[index].done = (newStatus === 'done');
             exercises[index].updatedAt = new Date().toISOString();
             localStorage.setItem('exercises', JSON.stringify(exercises));
-            displayExercises();
+            if (isRandomMode) {
+                displayRandomExercise();
+            } else {
+                displayExercises();
+            }
         }
 
         function openStatsModal() {
@@ -1654,6 +1970,7 @@
 
         function showExercises() {
             currentView = 'exercises';
+            newExerciseBtn.style.display = '';
             exerciseList.style.display = 'block';
             statsSection.style.display = 'none';
             simuladoSection.style.display = 'none';
@@ -1664,6 +1981,7 @@
 
         function showStats() {
             currentView = 'stats';
+            newExerciseBtn.style.display = '';
             exerciseList.style.display = 'none';
             statsSection.style.display = 'block';
             simuladoSection.style.display = 'none';
@@ -1696,6 +2014,7 @@
 
         function showSimulado() {
             currentView = 'simulado';
+            newExerciseBtn.style.display = 'none';
             exerciseList.style.display = 'none';
             statsSection.style.display = 'none';
             simuladoSection.style.display = 'block';
@@ -1747,14 +2066,16 @@
             if (document.getElementById('difficultyEasy').checked) selectedDifficulties.push('easy');
             if (document.getElementById('difficultyMedium').checked) selectedDifficulties.push('medium');
             if (document.getElementById('difficultyHard').checked) selectedDifficulties.push('hard');
+
             const selectedCategories = [];
             if (document.getElementById('categoryMatematica').checked) selectedCategories.push('Matemática');
             if (document.getElementById('categoryMicroeconomia').checked) selectedCategories.push('Microeconomia');
             if (document.getElementById('categoryMacroeconomia').checked) selectedCategories.push('Macroeconomia');
             if (document.getElementById('categoryEstatistica').checked) selectedCategories.push('Estatística');
             const tags = document.getElementById('simuladoTag').value.trim().split(',').map(t => t.trim()).filter(t => t);
+            const status = document.getElementById('simuladoStatus') ? document.getElementById('simuladoStatus').value : 'all';
             closeModalWindow(simuladoModal);
-            generateSimulado({ time, numQuestions, selectedDifficulties, selectedCategories, tags });
+            generateSimulado({ time, numQuestions, selectedDifficulties, selectedCategories, tags, status });
         }
 
         function generateSimulado(options) {
@@ -1764,6 +2085,12 @@
             }
             if (options.selectedCategories.length > 0) {
                 eligible = eligible.filter(ex => options.selectedCategories.includes(ex.category));
+            }
+            // Filter by completion status if requested
+            if (options.status === 'done') {
+                eligible = eligible.filter(ex => ex.done === true);
+            } else if (options.status === 'not-done') {
+                eligible = eligible.filter(ex => !ex.done);
             }
             if (options.tags && options.tags.length > 0) {
                 eligible = eligible.filter(ex => ex.tags && options.tags.some(tag => ex.tags.some(t => t.toLowerCase().includes(tag.toLowerCase()))));
@@ -1848,7 +2175,11 @@
             exercises[currentAnnotationIndex].annotations = annotationText.value;
             exercises[currentAnnotationIndex].updatedAt = new Date().toISOString();
             localStorage.setItem('exercises', JSON.stringify(exercises));
-            displayExercises();
+            if (isRandomMode) {
+                displayRandomExercise();
+            } else {
+                displayExercises();
+            }
             closeModalWindow(modal);
         };
 
@@ -1929,7 +2260,7 @@
         }
 
         saveEdit.onclick = function() {
-            const title = document.getElementById('editTitle').value;
+            let title = document.getElementById('editTitle').value.trim();
             const difficulty = document.getElementById('editDifficulty').value;
             const category = document.getElementById('editCategory').value;
             const imageInput = document.getElementById('editImage');
@@ -1940,7 +2271,12 @@
             const alternatives = Array.from(editAlternativesContainer.querySelectorAll('input')).map(input => input.value.trim()).filter(val => val);
             const correctIndex = alternatives.length > 0 ? parseInt(document.getElementById('editCorrectAlt').value) || 0 : null;
 
-            if (!title || !difficulty || !category) {
+            // If no title provided, use image filename
+            if (!title && imageInput.files[0]) {
+                title = imageInput.files[0].name.replace(/\.[^/.]+$/, ''); // Remove file extension
+            }
+
+            if (!difficulty || !category) {
                 alert('Título, dificuldade e categoria são obrigatórios.');
                 return;
             }
@@ -1987,6 +2323,7 @@
                 correctIndex,
                 annotations: exercises[editingIndex].annotations,
                 tags,
+                status: exercises[editingIndex].status || 'not-done',
                 done: exercises[editingIndex].done,
                 favorite: exercises[editingIndex].favorite,
                 createdAt: exercises[editingIndex].createdAt,
@@ -1994,7 +2331,11 @@
             };
             editingIndex = null;
             localStorage.setItem('exercises', JSON.stringify(exercises));
-            displayExercises();
+            if (isRandomMode) {
+                displayRandomExercise();
+            } else {
+                displayExercises();
+            }
             closeModalWindow(editModal);
         };
 
@@ -2079,6 +2420,215 @@
                 }
             };
             reader.readAsText(file);
+        }
+        
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const leftSidebar = document.getElementById('leftSidebar');
+        const modalOverlay = document.getElementById('modalOverlay');
+
+        hamburgerBtn.addEventListener('click', () => {
+            leftSidebar.classList.toggle('active');
+            modalOverlay.classList.toggle('active');
+        });
+
+        modalOverlay.addEventListener('click', () => {
+            leftSidebar.classList.remove('active');
+            modalOverlay.classList.remove('active');
+        });
+
+        document.querySelectorAll('.category-btn, .stats-btn, .simulado-btn, #tagsBtn, #exportBtn, #importBtn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                leftSidebar.classList.remove('active');
+                modalOverlay.classList.remove('active');
+            });
+        });
+
+        randomModeBtn.addEventListener('click', () => {
+            if (isRandomMode) {
+                closeRandomMode();
+            } else {
+                startRandomMode();
+            }
+        });
+
+        closeRandomBtn.addEventListener('click', closeRandomMode);
+
+        prevRandomBtn.addEventListener('click', () => {
+            if (currentRandomIndex > 0) {
+                currentRandomIndex--;
+                displayRandomExercise();
+            }
+        });
+
+        nextRandomBtn.addEventListener('click', () => {
+            if (currentRandomIndex < randomExercises.length - 1) {
+                currentRandomIndex++;
+                displayRandomExercise();
+            }
+        });
+
+        function startRandomMode() {
+            // Get exercises based on current category and status
+            let filtered = exercises.filter(exercise => {
+                if (currentCategory !== 'Todos' && exercise.category !== currentCategory) return false;
+                const exerciseStatus = exercise.status || 'not-done';
+                if (currentStatus === 'done' && exerciseStatus !== 'done') return false;
+                if (currentStatus === 'not-done' && exerciseStatus !== 'not-done') return false;
+                if (currentStatus === 'in-progress' && exerciseStatus !== 'in-progress') return false;
+                if (currentStatus === 'favorites' && !exercise.favorite) return false;
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                alert(`Nenhum exercício encontrado em "${currentCategory}" com o status "${currentStatus}".`);
+                return;
+            }
+
+            // Shuffle the exercises
+            randomExercises = filtered.sort(() => 0.5 - Math.random());
+            currentRandomIndex = 0;
+            isRandomMode = true;
+            randomModeBtn.classList.add('active');
+            randomExerciseContainer.classList.add('show');
+            exerciseList.style.display = 'none';
+            document.getElementById('pagination').style.display = 'none';
+            displayRandomExercise();
+        }
+
+        function closeRandomMode() {
+            isRandomMode = false;
+            randomModeBtn.classList.remove('active');
+            randomExerciseContainer.classList.remove('show');
+            exerciseList.style.display = 'block';
+            document.getElementById('pagination').style.display = 'flex';
+            displayExercises();
+        }
+
+        function displayRandomExercise() {
+            if (randomExercises.length === 0) return;
+
+            const exercise = randomExercises[currentRandomIndex];
+            const index = exercises.indexOf(exercise);
+            const tagsHtml = exercise.tags && exercise.tags.length > 0 
+                ? '<div class="tags">' + exercise.tags.map(tag => `<span class="tag">${tag}</span>`).join('') + '</div>' 
+                : '';
+            
+            const timerData = timers[index] || { current: 0, history: [] };
+            const timerDisplay = formatTime(timerData.current);
+            const historyHtml = timerData.history && timerData.history.length > 0 
+                ? timerData.history.map((entry, i) => `<div class="history-entry"><div><span>#${i+1}:</span> ${entry.time} - ${new Date(entry.date).toLocaleString()}</div><button type="button" class="delete-time-btn" onclick="deleteTime(${index}, ${i})">×</button></div>`).join('')
+                : '<div class="no-history">Nenhum tempo registrado</div>';
+
+            randomExerciseContent.innerHTML = `
+                <div class="tweet" style="margin: 0;">
+                    <div class="tweet-header">
+                        <span class="difficulty ${exercise.difficulty}">${exercise.difficulty === 'easy' ? 'Fácil' : exercise.difficulty === 'medium' ? 'Médio' : 'Difícil'}</span>
+                        <span class="category">${exercise.category}</span>
+                        <button class="annotation-btn ${exercise.annotations ? 'has-annotations' : ''}" onclick="openAnnotationModal(${index})">Anotações</button>
+                        <button class="favorite-btn" onclick="toggleFavorite(${index})">${exercise.favorite ? '★' : '☆'}</button>
+                    </div>
+                    <div class="tweet-content">
+                        <h4>${exercise.title}</h4>
+                        ${tagsHtml}
+                        ${exercise.image ? `<img src="${exercise.image}" alt="Exercício">` : ''}
+                        <p>${exercise.text}</p>
+                        <div class="timer-section collapsed">
+                            <div class="timer-toggle">
+                                <button class="timer-toggle-btn" onclick="toggleTimer(${index})">Expandir ▼</button>
+                            </div>
+                            <div class="timer-display" id="timer-display-${index}">${timerDisplay}</div>
+                            <div class="timer-controls">
+                                <button class="timer-btn" id="timer-start-${index}" onclick="startTimer(${index})">Iniciar</button>
+                                <button class="timer-btn pause" id="timer-pause-${index}" onclick="pauseTimer(${index})" style="display:none;">Pausar</button>
+                                <button class="timer-btn reset" id="timer-reset-${index}" onclick="resetTimer(${index})">Reiniciar</button>
+                                <button class="timer-btn complete" id="timer-complete-${index}" onclick="completeTimer(${index})">Completar</button>
+                            </div>
+                            <div class="timer-history">
+                                <h5>Tempos Registrados:</h5>
+                                ${historyHtml}
+                            </div>
+                        </div>
+                        ${exercise.alternatives.length > 0 ? '<h5>Alternativas:</h5><form class="alt-form">' + exercise.alternatives.map((alt, i) => `<label class="alt-label"><button type="button" class="rasurar-btn" data-alt-index="${i}">✂️</button> <span class="alt-text">${alt}</span> <input type="radio" name="alt${index}" value="${i}"></label><br>`).join('') + '</form><button class="responder-btn" data-index="' + index + '">Responder</button> <button class="limpar-btn" data-index="' + index + '">Limpar</button>' : ''}
+                        <div class="answer-accordion ${exercise.alternatives.length === 0 ? '' : 'hidden'}" id="accordion-${index}">
+                            <button class="accordion-toggle">Mostrar Resolução</button>
+                            <div class="accordion-content hidden">
+                                ${exercise.answerImage ? `<img src="${exercise.answerImage}" alt="Resposta">` : '<p>Sem imagem de resposta.</p>'}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="menu-container"><button class="menu-btn" onclick="toggleMenu(${index})">⋮</button><div class="dropdown-menu hidden" id="menu-${index}"><button class="edit-btn" onclick="editExercise(${index})">Editar</button><br><button class="delete-btn" onclick="deleteExercise(${index})">Excluir</button><br><button class="info-btn" onclick="showInfo(${index})">Info.</button></div></div>
+                    <div class="tweet-actions">
+                        <button class="feito-btn ${exercise.status || 'not-done'}" onclick="toggleDone(${index})" title="${exercise.status === 'done' ? 'Concluído' : exercise.status === 'in-progress' ? 'Em Progresso' : 'Não Feito'}">${exercise.status === 'done' ? '✓ Feito' : exercise.status === 'in-progress' ? '⊙ Incompleto' : 'Não Feito'}</button>
+                    </div>
+                </div>
+            `;
+
+            // Add event listeners for the random exercise
+            const responderBtn = randomExerciseContent.querySelector('.responder-btn');
+            const limparBtn = randomExerciseContent.querySelector('.limpar-btn');
+            if (responderBtn) {
+                responderBtn.addEventListener('click', () => {
+                    const altForm = randomExerciseContent.querySelector('.alt-form');
+                    const selected = altForm.querySelector('input:checked');
+                    if (selected) {
+                        const selectedIndex = parseInt(selected.value);
+                        const labels = altForm.querySelectorAll('label');
+                        labels.forEach((label, i) => {
+                            if (i === exercise.correctIndex) {
+                                label.style.color = 'green';
+                                label.style.fontWeight = 'bold';
+                            } else if (i === selectedIndex) {
+                                label.style.color = 'red';
+                            } else {
+                                label.style.color = '';
+                            }
+                        });
+                        const accordion = randomExerciseContent.querySelector(`#accordion-${index}`);
+                        if (accordion) accordion.classList.remove('hidden');
+                    }
+                });
+            }
+            if (limparBtn) {
+                limparBtn.addEventListener('click', () => {
+                    const altForm = randomExerciseContent.querySelector('.alt-form');
+                    const radios = altForm.querySelectorAll('input[type="radio"]');
+                    radios.forEach(radio => radio.checked = false);
+                    const labels = altForm.querySelectorAll('label');
+                    labels.forEach(label => {
+                        label.style.color = '';
+                        label.style.fontWeight = '';
+                    });
+                    const altTexts = altForm.querySelectorAll('.alt-text');
+                    altTexts.forEach(text => text.classList.remove('rasurada'));
+                    radios.forEach(radio => radio.disabled = false);
+                    const accordion = randomExerciseContent.querySelector(`#accordion-${index}`);
+                    if (accordion) accordion.classList.add('hidden');
+                });
+            }
+            const rasurarBtns = randomExerciseContent.querySelectorAll('.rasurar-btn');
+            rasurarBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const altIndex = parseInt(btn.dataset.altIndex);
+                    const label = btn.closest('.alt-label');
+                    const altText = label.querySelector('.alt-text');
+                    altText.classList.toggle('rasurada');
+                    const radio = label.querySelector('input[type="radio"]');
+                    radio.disabled = !radio.disabled;
+                });
+            });
+            const accordionToggle = randomExerciseContent.querySelector('.accordion-toggle');
+            if (accordionToggle) {
+                accordionToggle.addEventListener('click', () => {
+                    const content = accordionToggle.nextElementSibling;
+                    content.classList.toggle('hidden');
+                });
+            }
+
+            // Update navigation buttons
+            prevRandomBtn.disabled = currentRandomIndex === 0;
+            nextRandomBtn.disabled = currentRandomIndex === randomExercises.length - 1;
+            randomCounter.textContent = `${currentRandomIndex + 1}/${randomExercises.length}`;
         }
     </script>
 </body>
