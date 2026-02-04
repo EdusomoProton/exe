@@ -101,6 +101,19 @@
             background: #1DA1F2;
             color: #fff;
         }
+        .exercise-counter {
+            background: #1DA1F2;
+            color: #fff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            margin-right: 15px;
+        }
         .main-content {
             flex: 1;
             padding: 20px;
@@ -897,6 +910,7 @@
 <body>
 <header>
   <button class="hamburger-btn" id="hamburgerBtn">☰</button>
+  <div class="exercise-counter" id="exerciseCounter">0</div>
   <div class="logo"><img src="favicon.png" alt="Logo" style="height: 24px; margin-right: 10px;">App de Exercícios</div>
   <div class="search">
     <input type="text" id="searchInput" class="search-input" placeholder="Buscar por categoria ou #tag (ex: #Modelo AK, Microeconomia)">
@@ -2219,6 +2233,11 @@
                 }
                 filteredIndices.push(index);
             });
+            // Atualizar contador de exercícios
+            const counterElement = document.getElementById('exerciseCounter');
+            if (counterElement) {
+                counterElement.textContent = filteredIndices.length;
+            }
             const totalPages = Math.ceil(filteredIndices.length / pageSize);
             if (currentPage > totalPages) currentPage = totalPages || 1;
             const startIndex = (currentPage - 1) * pageSize;
@@ -2548,12 +2567,40 @@
             });
         }
 
-        function deleteExercise(index) {
+        async function deleteExercise(index) {
+            console.log('🗑️ Tentando deletar exercício no índice:', index);
             if (confirm('Tem certeza que deseja excluir este exercício?')) {
+                console.log('Exercício antes da exclusão:', exercises[index]);
+                console.log('Total de exercícios antes:', exercises.length);
+                
+                // Remove o exercício
                 exercises.splice(index, 1);
-                if (timers[index]) delete timers[index];
-                localStorage.setItem('exercises', JSON.stringify(exercises));
-                localStorage.setItem('timers', JSON.stringify(timers));
+                
+                // Remove o timer associado ao exercício
+                if (timers[index]) {
+                    timers.splice(index, 1);
+                }
+                
+                console.log('Total de exercícios depois:', exercises.length);
+                console.log('Array de exercícios:', exercises);
+                
+                // Salva as alterações usando saveToStorage (que salva em IndexedDB + localStorage)
+                try {
+                    await saveToStorage('exercises', exercises);
+                    console.log('✅ Exercícios salvos com sucesso');
+                    console.log('LocalStorage exercises:', JSON.parse(localStorage.getItem('exercises')).length, 'itens');
+                    
+                    await saveToStorage('timers', timers);
+                    console.log('✅ Timers salvos com sucesso');
+                } catch (error) {
+                    console.error('❌ Erro ao salvar:', error);
+                    alert('Erro ao deletar: ' + error);
+                }
+                
+                // Pequeno delay para garantir que tudo foi salvo
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                // Atualiza a visualização
                 if (isRandomMode) {
                     closeRandomMode();
                 } else {
