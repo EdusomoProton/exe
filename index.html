@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" sizes="512x512" href="favicon.png">
     <title>App de Exercícios</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropbox.js/10.34.0/Dropbox-sdk.min.js"></script>
     <style>
         body {
             font-family: 'TwitterChirp', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -1198,6 +1199,20 @@
                 Seu armazenamento agora usa <strong>IndexedDB (50MB+)</strong> como principal, com localStorage como backup automático.
             </p>
         </div>
+
+        <div style="margin-top: 20px; padding: 15px; background: #f3e5f5; border-radius: 8px; margin-bottom: 15px;">
+            <strong>☁️ Dropbox Sync</strong>
+            <p style="margin: 8px 0; font-size: 14px;" id="dropboxStatus">Não conectado ao Dropbox</p>
+            <div style="margin: 8px 6px; font-size: 12px; color: #666;">
+                ℹ️ <strong>Como funciona:</strong> Quando conectado, clique em "⬆️ Sincronizar" para fazer upload de <strong>TODOS</strong> os seus dados de uma vez. Isso cria um backup de tudo em um único arquivo no Dropbox. Operações locais (adicionar/editar) continuam funcionando normalmente em IndexedDB/localStorage sem afetá-lo.
+            </div>
+            <div id="dropboxControls" style="margin-top: 10px;">
+                <button id="dropboxLoginBtn" style="background: #0061ff; color: white; padding: 8px 12px; margin-right: 8px; border: none; border-radius: 5px; cursor: pointer; font-size: 13px;">🔗 Conectar Dropbox</button>
+                <button id="dropboxSyncBtn" style="background: #0061ff; color: white; padding: 8px 12px; margin-right: 8px; border: none; border-radius: 5px; cursor: pointer; font-size: 13px; display: none;">⬆️ Sincronizar Agora</button>
+                <button id="dropboxRestoreBtn" style="background: #00b894; color: white; padding: 8px 12px; margin-right: 8px; border: none; border-radius: 5px; cursor: pointer; font-size: 13px; display: none;">⬇️ Restaurar</button>
+                <button id="dropboxLogoutBtn" style="background: #ff6b6b; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; font-size: 13px; display: none;">🚪 Desconectar</button>
+            </div>
+        </div>
         
         <div style="margin-top: 20px;">
             <button id="calculateStorageBtn" style="background: #2196F3; color: white; padding: 10px 15px; margin-right: 10px; border: none; border-radius: 5px; cursor: pointer;">Recalcular</button>
@@ -1269,6 +1284,288 @@
 <input type="file" id="importFile" accept=".json" style="display:none">
 
 <script>
+        // ============================================
+        // DROPBOX INTEGRATION
+        // ============================================
+        const DROPBOX_CLIENT_ID = 'YOUR_CLIENT_ID'; // Será setado pelo usuário
+        let dropboxAuth = null;
+        let isDropboxConnected = false;
+
+        class DropboxManager {
+            constructor() {
+                this.isAuthenticated = false;
+                this.accessToken = localStorage.getItem('dropbox_token');
+                if (this.accessToken) {
+                    this.isAuthenticated = true;
+                }
+            }
+
+            async authenticate() {
+                try {
+                    const token = prompt('Cole seu Access Token do Dropbox:\n\n(Obtém em: https://www.dropbox.com/developers/apps → Sua App → Generate access token)', '');
+                    if (!token || token.trim().length === 0) {
+                        alert('❌ Token inválido! Verifique se copiou corretamente.');
+                        return false;
+                    }
+
+                    // Salvar token sem validação (será testado no primeiro sync)
+                    this.setAccessToken(token.trim());
+                    alert('✅ Token salvo! Clique em "⬆️ Sincronizar" para testar.');
+                    return true;
+                } catch (error) {
+                    console.error('Erro ao colar token:', error);
+                    alert('❌ Erro ao colar token. Tente novamente.');
+                    return false;
+                }
+            }
+
+            setAccessToken(token) {
+                this.accessToken = token;
+                localStorage.setItem('dropbox_token', token);
+                this.isAuthenticated = true;
+                updateDropboxStatus();
+            }
+
+            logout() {
+                this.accessToken = null;
+                this.isAuthenticated = false;
+                localStorage.removeItem('dropbox_token');
+                localStorage.removeItem('dropbox_client_id');
+                updateDropboxStatus();
+            }
+
+            async uploadToDropbox(data) {
+                if (!this.isAuthenticated || !this.accessToken) {
+                    alert('Você precisa conectar ao Dropbox primeiro.');
+                    return false;
+                }
+
+                try {
+                    const fileName = `/ExerciseApp/backup.json`;
+                    const jsonString = JSON.stringify(data, null, 2);
+                    const blob = new Blob([jsonString]);
+                    const size = blob.size;
+
+                    // If small enough, do a single upload (Dropbox limit ~150MB)
+                    const SINGLE_UPLOAD_LIMIT = 150 * 1024 * 1024; // 150MB
+                    if (size <= SINGLE_UPLOAD_LIMIT) {
+                        const response = await fetch('https://content.dropboxapi.com/2/files/upload', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${this.accessToken}`,
+                                'Dropbox-API-Arg': JSON.stringify({
+                                    path: fileName,
+                                    mode: 'overwrite',
+                                    mute: false
+                                }),
+                                'Content-Type': 'application/octet-stream'
+                            },
+                            body: blob
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.text();
+                            console.error('Erro Dropbox:', errorData);
+                            if (response.status === 401) {
+                                alert('❌ Token inválido ou expirado!\n\nGere um novo token em:\nhttps://www.dropbox.com/developers/apps');
+                                this.logout();
+                                return false;
+                            }
+                            alert(`❌ Erro ${response.status}: ${errorData}`);
+                            return false;
+                        }
+
+                        const result = await response.json();
+                        console.log('Backup enviado para Dropbox:', result);
+                        alert('✅ Backup sincronizado com Dropbox com sucesso!');
+                        return true;
+                    }
+
+                    // For large files, use upload_session (chunked)
+                    const CHUNK_SIZE = 8 * 1024 * 1024; // 8MB
+                    let offset = 0;
+
+                    // start session with first chunk
+                    const firstChunk = blob.slice(0, CHUNK_SIZE);
+                    let res = await fetch('https://content.dropboxapi.com/2/files/upload_session/start', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${this.accessToken}`,
+                            'Content-Type': 'application/octet-stream',
+                            'Dropbox-API-Arg': JSON.stringify({ close: false })
+                        },
+                        body: firstChunk
+                    });
+
+                    if (!res.ok) {
+                        const err = await res.text();
+                        console.error('Erro start session:', err);
+                        alert('❌ Erro ao iniciar upload em sessão. ' + err);
+                        return false;
+                    }
+
+                    const startData = await res.json();
+                    const sessionId = startData.session_id;
+                    offset += CHUNK_SIZE;
+
+                    // append middle chunks
+                    while (offset + CHUNK_SIZE < size) {
+                        const chunk = blob.slice(offset, offset + CHUNK_SIZE);
+                        const arg = { cursor: { session_id: sessionId, offset: offset }, close: false };
+                        const appendRes = await fetch('https://content.dropboxapi.com/2/files/upload_session/append_v2', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${this.accessToken}`,
+                                'Content-Type': 'application/octet-stream',
+                                'Dropbox-API-Arg': JSON.stringify(arg)
+                            },
+                            body: chunk
+                        });
+
+                        if (!appendRes.ok) {
+                            const err = await appendRes.text();
+                            console.error('Erro append session:', err);
+                            alert('❌ Erro ao enviar parte do upload em sessão. ' + err);
+                            return false;
+                        }
+
+                        offset += CHUNK_SIZE;
+                    }
+
+                    // finish with last chunk
+                    const lastChunk = blob.slice(offset, size);
+                    const commit = { path: fileName, mode: 'overwrite', mute: false };
+                    const finishArg = { cursor: { session_id: sessionId, offset: offset }, commit };
+
+                    const finishRes = await fetch('https://content.dropboxapi.com/2/files/upload_session/finish', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${this.accessToken}`,
+                            'Content-Type': 'application/octet-stream',
+                            'Dropbox-API-Arg': JSON.stringify(finishArg)
+                        },
+                        body: lastChunk
+                    });
+
+                    if (!finishRes.ok) {
+                        const err = await finishRes.text();
+                        console.error('Erro finish session:', err);
+                        alert('❌ Erro ao finalizar upload em sessão. ' + err);
+                        return false;
+                    }
+
+                    const finishResult = await finishRes.json();
+                    console.log('Upload session finalizado:', finishResult);
+                    alert('✅ Backup grande sincronizado com Dropbox com sucesso!');
+                    return true;
+                } catch (error) {
+                    console.error('Erro ao fazer upload para Dropbox:', error);
+                    alert('❌ Erro de conexão. Verifique sua internet ou tente novamente.');
+                    return false;
+                }
+            }
+
+            async downloadFromDropbox() {
+                if (!this.isAuthenticated || !this.accessToken) {
+                    alert('Você precisa conectar ao Dropbox primeiro.');
+                    return null;
+                }
+
+                try {
+                    const response = await fetch('https://api.dropboxapi.com/2/files/list_folder', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${this.accessToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            path: '/ExerciseApp',
+                            recursive: false,
+                            include_media_info: false,
+                            include_deleted: false,
+                            include_has_explicit_shared_members: false,
+                            include_mounted_folders: false
+                        })
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            alert('❌ Token inválido ou expirado!');
+                            this.logout();
+                            return null;
+                        }
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    if (result.entries.length === 0) {
+                        alert('Nenhum backup encontrado no Dropbox.');
+                        return null;
+                    }
+
+                    // Pega o arquivo mais recente
+                    const latestFile = result.entries.sort((a, b) => 
+                        new Date(b.server_modified) - new Date(a.server_modified)
+                    )[0];
+
+                    const fileResponse = await fetch('https://content.dropboxapi.com/2/files/download', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${this.accessToken}`,
+                            'Dropbox-API-Arg': JSON.stringify({
+                                path: latestFile.path_display
+                            })
+                        }
+                    });
+
+                    if (!fileResponse.ok) {
+                        if (fileResponse.status === 401) {
+                            alert('❌ Token inválido ou expirado!');
+                            this.logout();
+                            return null;
+                        }
+                        throw new Error(`HTTP ${fileResponse.status}`);
+                    }
+
+                    const data = await fileResponse.json();
+                    console.log('Dados restaurados do Dropbox:', data);
+                    alert('✅ Dados restaurados do Dropbox com sucesso!');
+                    return data;
+                } catch (error) {
+                    console.error('Erro ao baixar de Dropbox:', error);
+                    alert('❌ Erro ao restaurar dados do Dropbox. Verifique sua conexão.');
+                    return null;
+                }
+            }
+        }
+
+        const dropboxManager = new DropboxManager();
+
+        function updateDropboxStatus() {
+            const statusEl = document.getElementById('dropboxStatus');
+            const loginBtn = document.getElementById('dropboxLoginBtn');
+            const syncBtn = document.getElementById('dropboxSyncBtn');
+            const restoreBtn = document.getElementById('dropboxRestoreBtn');
+            const logoutBtn = document.getElementById('dropboxLogoutBtn');
+
+            if (dropboxManager.isAuthenticated) {
+                statusEl.textContent = '✅ Conectado ao Dropbox';
+                statusEl.style.color = 'green';
+                loginBtn.style.display = 'none';
+                syncBtn.style.display = 'inline-block';
+                restoreBtn.style.display = 'inline-block';
+                logoutBtn.style.display = 'inline-block';
+            } else {
+                statusEl.textContent = '❌ Não conectado ao Dropbox';
+                statusEl.style.color = 'red';
+                loginBtn.style.display = 'inline-block';
+                syncBtn.style.display = 'none';
+                restoreBtn.style.display = 'none';
+                logoutBtn.style.display = 'none';
+            }
+        }
+
+        // ============================================
         // IndexedDB Setup - Primary storage (50MB+)
         let db = null;
         const DB_NAME = 'ExerciseApp';
@@ -1427,14 +1724,33 @@
         let stats = {};
         let timers = {};
         let simuladoHistory = [];
+        let pendingSync = false;  // Flag para sincronização pendente com Dropbox
+        let isSyncing = false;    // Flag para evitar múltiplas sincronizações simultâneas
         
         // Initialize on load
         initIndexedDB().then(async () => {
-            const data = await loadData();
-            exercises = data.exercises;
-            stats = data.stats;
-            timers = data.timers;
-            simuladoHistory = data.simuladoHistory;
+            // Tentar carregar dados do Dropbox automaticamente
+            const dropboxData = await dropboxManager.downloadFromDropbox().catch(() => null);
+            
+            if (dropboxData) {
+                // Dados carregados com sucesso do Dropbox
+                exercises = dropboxData.exercises || [];
+                stats = dropboxData.stats || {};
+                timers = dropboxData.timers || {};
+                simuladoHistory = dropboxData.simuladoHistory || [];
+                console.log('✅ Dados carregados do Dropbox');
+            } else {
+                // Fallback: carregar dados locais (IndexedDB/localStorage)
+                const data = await loadData();
+                exercises = data.exercises;
+                stats = data.stats;
+                timers = data.timers;
+                simuladoHistory = data.simuladoHistory;
+                console.log('📱 Usando dados locais (Dropbox indisponível ou vazio)');
+            }
+            
+            // Initialize Dropbox status
+            updateDropboxStatus();
             
             // Process exercises
             exercises.forEach(ex => {
@@ -1475,40 +1791,11 @@
             showExercises();
         });
         
-        // Helper function to save with IndexedDB + localStorage fallback
+        // Helper function - salvamento automático desabilitado
+        // O salvamento APENAS ocorre quando o usuário clica "Sincronizar" (upload para Dropbox)
         async function saveToStorage(key, data) {
-            try {
-                // Save to IndexedDB first
-                if (db) {
-                    const storeMap = {
-                        'exercises': STORES.exercises,
-                        'stats': STORES.stats,
-                        'timers': STORES.timers,
-                        'simuladoHistory': STORES.simuladoHistory
-                    };
-                    
-                    if (storeMap[key]) {
-                        await saveToIndexedDB(storeMap[key], key, data);
-                    }
-                }
-                
-                // Also save to localStorage as backup
-                localStorage.setItem(key, JSON.stringify(data));
-                console.log(`✅ Salvo em IndexedDB: ${key}`);
-            } catch (error) {
-                console.error(`Erro ao salvar ${key}:`, error);
-                // Try localStorage only
-                try {
-                    localStorage.setItem(key, JSON.stringify(data));
-                    console.log(`✅ Salvo em localStorage (fallback): ${key}`);
-                } catch (e) {
-                    if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
-                        alert('⚠️ Espaço de armazenamento CHEIO!\n\nAbra o gerenciador de Storage (botão 📊 no menu) para limpar dados manualmente.');
-                    } else {
-                        alert('Erro ao salvar dados: ' + e.message);
-                    }
-                }
-            }
+            // Não faz nada - todo salvamento é manual via Dropbox sync
+            console.log(`📝 Dados em memória (${key}) - será salvo no Dropbox ao sincronizar`);
         }
         
         // Legacy function for compatibility
@@ -1769,7 +2056,76 @@
             }
         });
 
-        const simuladoForm = document.getElementById('simuladoForm');
+        // ============================================
+        // DROPBOX EVENT LISTENERS
+        // ============================================
+        document.getElementById('dropboxLoginBtn').addEventListener('click', async () => {
+            await dropboxManager.authenticate();
+        });
+
+        document.getElementById('dropboxSyncBtn').addEventListener('click', async () => {
+            if (isSyncing) {
+                alert('⏳ Sincronização em andamento. Aguarde...');
+                return;
+            }
+            
+            isSyncing = true;
+            try {
+                const dataToSync = {
+                    exercises: exercises,
+                    stats: stats,
+                    timers: timers,
+                    simuladoHistory: simuladoHistory,
+                    lastSync: new Date().toISOString()
+                };
+                const success = await dropboxManager.uploadToDropbox(dataToSync);
+                if (success) {
+                    pendingSync = false;
+                    // Save locally as cache after successful upload
+                    await saveToStorage('exercises', exercises);
+                    await saveToStorage('stats', stats);
+                    await saveToStorage('timers', timers);
+                    await saveToStorage('simuladoHistory', simuladoHistory);
+                    console.log('✅ Sincronização completa: dados salvos em IndexedDB/localStorage como cache');
+                }
+            } finally {
+                isSyncing = false;
+            }
+        });
+
+        document.getElementById('dropboxRestoreBtn').addEventListener('click', async () => {
+            if (confirm('Tem certeza que deseja restaurar dados do Dropbox? Os dados locais serão sobrescrito!')) {
+                const restoredData = await dropboxManager.downloadFromDropbox();
+                if (restoredData) {
+                    exercises = restoredData.exercises || [];
+                    stats = restoredData.stats || {};
+                    timers = restoredData.timers || {};
+                    simuladoHistory = restoredData.simuladoHistory || [];
+                    
+                    // Save to local storage
+                    await saveToStorage('exercises', exercises);
+                    await saveToStorage('stats', stats);
+                    await saveToStorage('timers', timers);
+                    await saveToStorage('simuladoHistory', simuladoHistory);
+                    
+                    displayExercises();
+                    updateStorageInfo();
+                    alert('✅ Dados restaurados com sucesso!');
+                }
+            }
+        });
+
+        document.getElementById('dropboxLogoutBtn').addEventListener('click', () => {
+            if (confirm('Tem certeza que deseja desconectar do Dropbox?')) {
+                dropboxManager.logout();
+                alert('Desconectado do Dropbox com sucesso!');
+            }
+        });
+
+        // Atualizar status do Dropbox ao abrir modal
+        storageBtn.addEventListener('click', () => {
+            updateDropboxStatus();
+        });        const simuladoForm = document.getElementById('simuladoForm');
 
         closeSimuladoModal.addEventListener('click', () => closeModalWindow(simuladoModal));
 
