@@ -2555,6 +2555,52 @@
             });
         }
         
+        // Função para limpar o modal de novo exercício
+        function clearNewExerciseModal() {
+            // Limpar formulário
+            form.reset();
+            
+            // Limpar imagens
+            selectedImages = [];
+            const imageInput = document.getElementById('image');
+            imageInput.value = '';
+            document.getElementById('multiImagePreview').style.display = 'none';
+            document.getElementById('imagesList').innerHTML = '';
+            
+            // Limpar alternativas
+            alternativesContainer.innerHTML = '';
+            updateCorrectAltOptions();
+            
+            // Limpar tags - apenas limpar a seleção, sem reinicializar
+            const tagsDisplay = document.getElementById('selectedTagsDisplay');
+            if (tagsDisplay) {
+                tagsDisplay.innerHTML = '<span style="color: #999; font-style: italic;">Nenhuma etiqueta selecionada</span>';
+            }
+            const tagsInput = document.getElementById('tags');
+            if (tagsInput) tagsInput.value = '';
+            
+            // Limpar chips selecionados no container de tags existentes
+            const existingTagsContainer = document.getElementById('existingTags');
+            if (existingTagsContainer) {
+                const selectedChips = existingTagsContainer.querySelectorAll('.tag-chip.selected');
+                selectedChips.forEach(chip => chip.classList.remove('selected'));
+            }
+            
+            // Limpar o input de busca e novo input de tag
+            const tagSearchInput = document.getElementById('tagSearchInput');
+            if (tagSearchInput) tagSearchInput.value = '';
+            const newTagInput = document.getElementById('newTagInput');
+            if (newTagInput) newTagInput.value = '';
+            
+            // Resetar progresso
+            document.getElementById('uploadProgress').style.display = 'none';
+            isProcessing = false;
+            submitBtn.disabled = false;
+            
+            // Fechar o modal
+            closeModalWindow(newModal);
+        }
+        
         // Handle multiple image selection
         const imageInput = document.getElementById('image');
         imageInput.addEventListener('change', function(e) {
@@ -2737,16 +2783,14 @@
                 
                 if (filesToRead === 0) {
                     saveExercise(baseTitle, difficulty, category, null, exerciseText, answerImageData, alternatives, correctIndex, tags);
-                    isProcessing = false;
-                    submitBtn.disabled = false;
+                    clearNewExerciseModal();
                 } else {
                     const reader = new FileReader();
                     reader.onload = async function(event) {
                         // Compress answer image too
                         answerImageData = await compressImage(event.target.result, 0.6);
                         saveExercise(baseTitle, difficulty, category, null, exerciseText, answerImageData, alternatives, correctIndex, tags);
-                        isProcessing = false;
-                        submitBtn.disabled = false;
+                        clearNewExerciseModal();
                     };
                     reader.onerror = function() {
                         alert('Erro ao carregar imagem de resposta');
@@ -2795,6 +2839,7 @@
                                     uploadStatus.textContent = 'Carregando...';
                                     isProcessing = false;
                                     submitBtn.disabled = false;
+                                    clearNewExerciseModal();
                                     console.log('Upload concluído!');
                                 }, 500);
                             }
@@ -2829,15 +2874,6 @@
                 exercises.push(exercise);
                 saveToLocalStorage('exercises', exercises);
                 displayExercises();
-                
-                // Reset form and state (only on first call, not on multiple)
-                if (selectedImages.length === 0 && !isProcessing) {
-                    form.reset();
-                    alternativesContainer.innerHTML = '';
-                    updateCorrectAltOptions();
-                    document.getElementById('multiImagePreview').style.display = 'none';
-                    imageInput.value = '';
-                }
                 
                 console.log('Exercício salvo:', title);
             } catch (error) {
@@ -3565,7 +3601,7 @@
 
         closeModal.onclick = () => closeModalWindow(modal);
 
-        closeNewModal.onclick = () => closeModalWindow(newModal);
+        closeNewModal.onclick = () => clearNewExerciseModal();
 
         closeEditModal.onclick = () => closeModalWindow(editModal);
 
@@ -4035,5 +4071,6 @@
     </script>
 </body>
 </html>
+
 
 
