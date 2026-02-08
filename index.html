@@ -503,6 +503,134 @@
             border-radius: 4px;
             color: #000;
         }
+        .tag-selector {
+            margin: 15px 0;
+        }
+        .tag-selector-label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        .tag-search-section {
+            margin-bottom: 12px;
+        }
+        .tag-search-input {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+            margin-bottom: 6px;
+            transition: border-color 0.2s ease;
+        }
+        .tag-search-input:focus {
+            outline: none;
+            border-color: #1DA1F2;
+            background: #f0f8ff;
+        }
+        .tag-search-info {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .existing-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+        .tag-chip {
+            display: inline-flex;
+            align-items: center;
+            background: #e9ecef;
+            border: 2px solid #ddd;
+            padding: 6px 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 13px;
+            user-select: none;
+        }
+        .tag-chip:hover {
+            background: #dee2e6;
+            border-color: #999;
+        }
+        .tag-chip.selected {
+            background: #1DA1F2;
+            border-color: #1DA1F2;
+            color: #fff;
+            font-weight: bold;
+        }
+        .tag-chip.selected:hover {
+            background: #1991DB;
+            border-color: #1991DB;
+        }
+        .no-tags-message {
+            text-align: center;
+            padding: 20px 10px;
+            color: #999;
+            font-style: italic;
+            font-size: 13px;
+        }
+        .new-tag-section {
+            border-top: 1px solid #ddd;
+            padding-top: 12px;
+            margin-top: 12px;
+        }
+        .new-tag-section-label {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 13px;
+            display: block;
+        }
+        .new-tag-input {
+            display: block;
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+            margin-bottom: 8px;
+        }
+        .new-tag-input:focus {
+            outline: none;
+            border-color: #1DA1F2;
+        }
+        .new-tag-hint {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 8px;
+        }
+        .selected-tags-display {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+            padding: 8px;
+            background: #f0f8ff;
+            border-radius: 4px;
+            min-height: 30px;
+            border: 1px solid #1DA1F2;
+        }
+        .selected-tags-display .tag-chip {
+            background: #1DA1F2;
+            color: white;
+            border: 1px solid #1DA1F2;
+        }
+        .selected-tags-display .tag-chip:hover {
+            background: #1991DB;
+        }
         .hidden {
             display: none;
         }
@@ -1047,8 +1175,21 @@
     <label for="editAnswerImage">Imagem da Resolução (opcional):</label>
     <input type="file" id="editAnswerImage" accept="image/*">
 
-    <label for="editTags">Etiquetas (opcional, use # para hashtags, separadas por vírgula):</label>
-    <input type="text" id="editTags" placeholder="#Tag1, #Tag2">
+    <div class="tag-selector">
+      <label class="tag-selector-label">Etiquetas:</label>
+      <div class="tag-search-section">
+        <input type="text" class="tag-search-input" id="editTagSearchInput" placeholder="🔍 Buscar tags existentes...">
+        <div class="tag-search-info">Total: <span id="editTagCountInfo">0</span> | Exibindo: <span id="editTagDisplayInfo">0</span></div>
+      </div>
+      <div class="existing-tags" id="editExistingTags"></div>
+      <div class="new-tag-section">
+        <label class="new-tag-section-label">Adicionar Nova Etiqueta:</label>
+        <input type="text" class="new-tag-input" id="editNewTagInput" placeholder="#Python, #Recursão, etc...">
+        <div class="new-tag-hint">Pressione ENTER para adicionar</div>
+      </div>
+      <div class="selected-tags-display" id="editSelectedTagsDisplay"></div>
+    </div>
+    <input type="hidden" id="editTags" value="">
 
     <label>Alternativas (opcional):</label>
     <div id="editAlternativesContainer"></div>
@@ -1104,8 +1245,21 @@
       <label for="answerImage">Imagem da Resposta (opcional):</label>
       <input type="file" id="answerImage" accept="image/*">
 
-      <label for="tags">Etiquetas (opcional, use # para hashtags, separadas por vírgula, ex: #Teorias do Crescimento, #Modelo AK):</label>
-      <input type="text" id="tags" placeholder="#Tag1, #Tag2">
+      <div class="tag-selector">
+        <label class="tag-selector-label">Etiquetas:</label>
+        <div class="tag-search-section">
+          <input type="text" class="tag-search-input" id="tagSearchInput" placeholder="🔍 Buscar tags existentes...">
+          <div class="tag-search-info">Total: <span id="tagCountInfo">0</span> | Exibindo: <span id="tagDisplayInfo">0</span></div>
+        </div>
+        <div class="existing-tags" id="existingTags"></div>
+        <div class="new-tag-section">
+          <label class="new-tag-section-label">Adicionar Nova Etiqueta:</label>
+          <input type="text" class="new-tag-input" id="newTagInput" placeholder="#Python, #Recursão, etc...">
+          <div class="new-tag-hint">Pressione ENTER para adicionar</div>
+        </div>
+        <div class="selected-tags-display" id="selectedTagsDisplay"></div>
+      </div>
+      <input type="hidden" id="tags" value="">
 
       <label>Alternativas (opcional):</label>
       <div id="alternativesContainer"></div>
@@ -1835,6 +1989,136 @@
             document.body.style.overflow = 'auto';
         }
 
+        // ===== GERENCIAMENTO DE TAGS =====
+        // Extrai todas as tags únicas dos exercícios
+        function getAllExistingTags() {
+            const allTags = new Set();
+            exercises.forEach(ex => {
+                if (ex.tags && Array.isArray(ex.tags)) {
+                    ex.tags.forEach(tag => allTags.add(tag));
+                }
+            });
+            return Array.from(allTags).sort();
+        }
+
+        // Inicializa o seletor de tags com busca
+        function initializeTagSelector(containerId, selectedTagsDisplayId, newTagInputId, hiddenInputId, modalType = 'new') {
+            const existingTagsContainer = document.getElementById(containerId);
+            const selectedTagsDisplay = document.getElementById(selectedTagsDisplayId);
+            const newTagInput = document.getElementById(newTagInputId);
+            const hiddenInput = document.getElementById(hiddenInputId);
+            
+            // Obter IDs do campo de busca baseado no tipo de modal
+            const searchInputId = modalType === 'edit' ? 'editTagSearchInput' : 'tagSearchInput';
+            const countInfoId = modalType === 'edit' ? 'editTagCountInfo' : 'tagCountInfo';
+            const displayInfoId = modalType === 'edit' ? 'editTagDisplayInfo' : 'tagDisplayInfo';
+            
+            const tagSearchInput = document.getElementById(searchInputId);
+            const tagCountInfo = document.getElementById(countInfoId);
+            const tagDisplayInfo = document.getElementById(displayInfoId);
+            
+            const allTags = getAllExistingTags();
+            let selectedTags = new Set();
+            let filteredTags = [...allTags];
+
+            // Se for edição, carrega as tags já selecionadas
+            if (modalType === 'edit' && editingIndex !== null && exercises[editingIndex].tags) {
+                selectedTags = new Set(exercises[editingIndex].tags);
+            }
+
+            // Renderiza as tags existentes (filtrando conforme busca)
+            function renderExistingTags() {
+                existingTagsContainer.innerHTML = '';
+                
+                if (filteredTags.length === 0) {
+                    existingTagsContainer.innerHTML = '<div class="no-tags-message">Nenhuma etiqueta encontrada</div>';
+                    return;
+                }
+                
+                filteredTags.forEach(tag => {
+                    const chip = document.createElement('div');
+                    chip.className = 'tag-chip' + (selectedTags.has(tag) ? ' selected' : '');
+                    chip.textContent = tag;
+                    chip.addEventListener('click', () => {
+                        if (selectedTags.has(tag)) {
+                            selectedTags.delete(tag);
+                            chip.classList.remove('selected');
+                        } else {
+                            selectedTags.add(tag);
+                            chip.classList.add('selected');
+                        }
+                        updateDisplay();
+                    });
+                    existingTagsContainer.appendChild(chip);
+                });
+                
+                // Atualizar contadores
+                if (tagCountInfo) tagCountInfo.textContent = allTags.length;
+                if (tagDisplayInfo) tagDisplayInfo.textContent = filteredTags.length;
+            }
+
+            // Atualiza a exibição das tags selecionadas
+            function updateDisplay() {
+                selectedTagsDisplay.innerHTML = '';
+                const sortedSelected = Array.from(selectedTags).sort();
+                if (sortedSelected.length === 0) {
+                    selectedTagsDisplay.innerHTML = '<span style="color: #999; font-style: italic;">Nenhuma etiqueta selecionada</span>';
+                } else {
+                    sortedSelected.forEach(tag => {
+                        const chip = document.createElement('div');
+                        chip.className = 'tag-chip selected';
+                        chip.innerHTML = tag + ' <span style="margin-left: 5px; cursor: pointer; font-weight: bold;">&times;</span>';
+                        chip.style.cursor = 'pointer';
+                        chip.addEventListener('click', () => {
+                            selectedTags.delete(tag);
+                            renderExistingTags();
+                            updateDisplay();
+                        });
+                        selectedTagsDisplay.appendChild(chip);
+                    });
+                }
+                // Atualiza o input hidden com as tags selecionadas
+                hiddenInput.value = Array.from(selectedTags).join(', ');
+            }
+
+            // Filtro de busca
+            if (tagSearchInput) {
+                tagSearchInput.addEventListener('input', (e) => {
+                    const searchValue = e.target.value.toLowerCase().trim();
+                    if (searchValue === '') {
+                        filteredTags = [...allTags];
+                    } else {
+                        filteredTags = allTags.filter(tag => 
+                            tag.toLowerCase().includes(searchValue)
+                        );
+                    }
+                    renderExistingTags();
+                });
+            }
+
+            // Permite adicionar novas tags via input
+            newTagInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    let newTag = newTagInput.value.trim();
+                    if (newTag) {
+                        // Adiciona # se não tiver
+                        if (!newTag.startsWith('#')) {
+                            newTag = '#' + newTag;
+                        }
+                        selectedTags.add(newTag);
+                        newTagInput.value = '';
+                        renderExistingTags();
+                        updateDisplay();
+                    }
+                }
+            });
+
+            // Renderiza inicial
+            renderExistingTags();
+            updateDisplay();
+        }
+
         const form = document.getElementById('exerciseForm');
         const exerciseList = document.getElementById('exerciseList');
         const modal = document.getElementById('annotationModal');
@@ -1884,7 +2168,14 @@
 
         addAlternativeBtn.addEventListener('click', addAlternativeInput);
         editAddAlternativeBtn.addEventListener('click', addEditAlternativeInput);
-        newExerciseBtn.addEventListener('click', () => openModal(newModal));
+        newExerciseBtn.addEventListener('click', () => {
+            openModal(newModal);
+            // Limpa o form quando abre
+            document.getElementById('exerciseForm').reset();
+            document.getElementById('newTagInput').value = '';
+            // Inicializa o seletor de tags
+            initializeTagSelector('existingTags', 'selectedTagsDisplay', 'newTagInput', 'tags', 'new');
+        });
         document.querySelectorAll('.category-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
@@ -3455,7 +3746,7 @@
             document.getElementById('editDifficulty').value = ex.difficulty;
             document.getElementById('editCategory').value = ex.category;
             document.getElementById('editExerciseText').value = ex.text || '';
-            document.getElementById('editTags').value = ex.tags ? ex.tags.join(', ') : '';
+            document.getElementById('editNewTagInput').value = '';
             // Clear previous alternatives
             editAlternativesContainer.innerHTML = '';
             if (ex.alternatives && ex.alternatives.length > 0) {
@@ -3464,6 +3755,8 @@
             updateEditCorrectAltOptions();
             document.getElementById('editCorrectAlt').value = ex.correctIndex || 0;
             openModal(editModal);
+            // Inicializa o seletor de tags para edição
+            initializeTagSelector('editExistingTags', 'editSelectedTagsDisplay', 'editNewTagInput', 'editTags', 'edit');
         }
 
         // Paste image
@@ -3742,4 +4035,5 @@
     </script>
 </body>
 </html>
+
 
