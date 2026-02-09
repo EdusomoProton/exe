@@ -2083,7 +2083,8 @@
 
             // Filtro de busca
             if (tagSearchInput) {
-                tagSearchInput.addEventListener('input', (e) => {
+                // remove qualquer handler anterior e use oninput para evitar listeners duplicados
+                tagSearchInput.oninput = function(e) {
                     const searchValue = e.target.value.toLowerCase().trim();
                     if (searchValue === '') {
                         filteredTags = [...allTags];
@@ -2093,26 +2094,28 @@
                         );
                     }
                     renderExistingTags();
-                });
+                };
             }
 
             // Permite adicionar novas tags via input
-            newTagInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    let newTag = newTagInput.value.trim();
-                    if (newTag) {
-                        // Adiciona # se não tiver
-                        if (!newTag.startsWith('#')) {
-                            newTag = '#' + newTag;
+            if (newTagInput) {
+                // remover qualquer handler anterior e usar onkeypress para garantir apenas um listener
+                newTagInput.onkeypress = function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        let newTag = newTagInput.value.trim();
+                        if (newTag) {
+                            if (!newTag.startsWith('#')) {
+                                newTag = '#' + newTag;
+                            }
+                            selectedTags.add(newTag);
+                            newTagInput.value = '';
+                            renderExistingTags();
+                            updateDisplay();
                         }
-                        selectedTags.add(newTag);
-                        newTagInput.value = '';
-                        renderExistingTags();
-                        updateDisplay();
                     }
-                }
-            });
+                };
+            }
 
             // Renderiza inicial
             renderExistingTags();
@@ -2596,7 +2599,13 @@
             document.getElementById('uploadProgress').style.display = 'none';
             isProcessing = false;
             submitBtn.disabled = false;
-            
+            // Re-inicializar o seletor de tags para garantir que não haja estado residual
+            try {
+                initializeTagSelector('existingTags', 'selectedTagsDisplay', 'newTagInput', 'tags', 'new');
+            } catch (e) {
+                // silent
+            }
+
             // Fechar o modal
             closeModalWindow(newModal);
         }
