@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" sizes="512x512" href="favicon.png">
-    <link rel="manifest" href="manifest.json">
     <title>App de Exercícios</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dropbox.js/10.34.0/Dropbox-sdk.min.js"></script>
     <style>
@@ -1045,7 +1044,8 @@
   <div class="search">
     <input type="text" id="searchInput" class="search-input" placeholder="Buscar por categoria ou #tag (ex: #Modelo AK, Microeconomia)">
   </div>
-  <button class="random-mode-btn" id="randomModeBtn" title="Modo Aleatório">🎲 Aleatório</button>
+    <button class="random-mode-btn" id="randomModeBtn" title="Modo Aleatório">🎲 Aleatório</button>
+    <button id="viewAllAnnotationsBtn" title="Ver todas as anotações">🗒️ Anotações</button>
 </header>
 
 <div class="modal-overlay" id="modalOverlay"></div>
@@ -1142,6 +1142,15 @@
     <textarea id="annotationText" rows="10" placeholder="Digite suas anotações aqui..."></textarea>
     <button id="saveAnnotation">Salvar Anotação</button>
   </div>
+</div>
+
+<!-- Modal for ALL annotations -->
+<div id="allAnnotationsModal" class="modal">
+    <div class="modal-content">
+        <span class="close" id="closeAllAnnotationsModal">&times;</span>
+        <h2>Todas as Anotações</h2>
+        <div id="allAnnotationsList" style="max-height:60vh; overflow:auto; margin-top:10px;"></div>
+    </div>
 </div>
 
 <!-- Modal for editing -->
@@ -2915,14 +2924,26 @@
                 if (currentStatus === 'favorites' && !exercise.favorite) return;
                 if (searchTerm) {
                     const searchTerms = searchTerm.split(',').map(t => t.trim()).filter(t => t);
-                    const matches = searchTerms.some(term => {
-                        const matchesTag = exercise.tags && exercise.tags.some(tag => tag.toLowerCase().includes(term));
-                        const matchesCategory = exercise.category.toLowerCase().includes(term);
-                        const matchesTitle = exercise.title.toLowerCase().includes(term);
-                        const matchesText = exercise.text.toLowerCase().includes(term);
-                        return matchesTag || matchesCategory || matchesTitle || matchesText;
-                    });
-                    if (!matches) return;
+                    // If all search terms are tags (start with '#'), require AND: exercise must include ALL tags
+                    const allAreTags = searchTerms.length > 0 && searchTerms.every(t => t.startsWith('#'));
+
+                    if (allAreTags) {
+                        const lowerTags = (exercise.tags || []).map(t => t.toLowerCase());
+                        const required = searchTerms.map(t => t.toLowerCase());
+                        const hasAll = required.every(req => lowerTags.some(tag => tag === req || tag === req.replace(/^#/, '')));
+                        if (!hasAll) return;
+                    } else {
+                        // Previous behavior: OR across terms matching tags/category/title/text
+                        const matches = searchTerms.some(term => {
+                            const termLower = term.toLowerCase();
+                            const matchesTag = exercise.tags && exercise.tags.some(tag => tag.toLowerCase().includes(termLower));
+                            const matchesCategory = exercise.category.toLowerCase().includes(termLower);
+                            const matchesTitle = exercise.title.toLowerCase().includes(termLower);
+                            const matchesText = exercise.text.toLowerCase().includes(termLower);
+                            return matchesTag || matchesCategory || matchesTitle || matchesText;
+                        });
+                        if (!matches) return;
+                    }
                 }
                 filteredIndices.push(index);
             });
@@ -2947,6 +2968,7 @@
                 const historyHtml = timerData.history && timerData.history.length > 0 
                     ? timerData.history.map((entry, i) => `<div class="history-entry"><div><span>#${i+1}:</span> ${entry.time} - ${new Date(entry.date).toLocaleString()}</div><button type="button" class="delete-time-btn" onclick="deleteTime(${index}, ${i})">×</button></div>`).join('')
                     : '<div class="no-history">Nenhum tempo registrado</div>';
+                exerciseDiv.setAttribute('data-index', index);
                 exerciseDiv.innerHTML = `
                     <div class="tweet-header">
                         <span class="difficulty ${exercise.difficulty}">${exercise.difficulty === 'easy' ? 'Fácil' : exercise.difficulty === 'medium' ? 'Médio' : 'Difícil'}</span>
@@ -3353,6 +3375,93 @@
             openModal(modal);
         }
 
+        // ===== Lista de todas as anotações =====
+        const viewAllAnnotationsBtn = document.getElementById('viewAllAnnotationsBtn');
+        const allAnnotationsModal = document.getElementById('allAnnotationsModal');
+        const closeAllAnnotationsModal = document.getElementById('closeAllAnnotationsModal');
+        const allAnnotationsList = document.getElementById('allAnnotationsList');
+
+        if (viewAllAnnotationsBtn) {
+            viewAllAnnotationsBtn.addEventListener('click', () => {
+                displayAllAnnotations();
+                openModal(allAnnotationsModal);
+            });
+        }
+
+        if (closeAllAnnotationsModal) closeAllAnnotationsModal.addEventListener('click', () => closeModalWindow(allAnnotationsModal));
+
+        function displayAllAnnotations() {
+            if (!allAnnotationsList) return;
+            allAnnotationsList.innerHTML = '';
+            const items = [];
+            exercises.forEach((ex, idx) => {
+                if (ex && ex.annotations && ex.annotations.toString().trim()) items.push({ ex, idx });
+            });
+
+            if (items.length === 0) {
+                allAnnotationsList.innerHTML = '<p>Nenhuma anotação encontrada.</p>';
+                return;
+            }
+
+            items.forEach(({ ex, idx }) => {
+                const entry = document.createElement('div');
+                entry.className = 'annotation-entry';
+                entry.style.padding = '10px';
+                entry.style.borderBottom = '1px solid #ddd';
+                entry.style.display = 'flex';
+                entry.style.flexDirection = 'column';
+                entry.style.gap = '6px';
+
+                const title = document.createElement('strong');
+                title.textContent = ex.title || `Exercício ${idx + 1}`;
+
+                const meta = document.createElement('div');
+                meta.style.fontSize = '12px';
+                meta.style.color = '#666';
+                meta.textContent = `Atualizado: ${ex.updatedAt ? new Date(ex.updatedAt).toLocaleString() : new Date(ex.createdAt).toLocaleString()}`;
+
+                const text = document.createElement('div');
+                const full = ex.annotations.toString();
+                text.textContent = full.length > 500 ? full.slice(0, 500) + '…' : full;
+                text.style.whiteSpace = 'pre-wrap';
+
+                const controls = document.createElement('div');
+                controls.style.display = 'flex';
+                controls.style.gap = '8px';
+
+                const openBtn = document.createElement('button');
+                openBtn.textContent = 'Abrir';
+                openBtn.addEventListener('click', () => {
+                    closeModalWindow(allAnnotationsModal);
+                    // Reusar modal de anotação para o exercício selecionado
+                    openAnnotationModal(idx);
+                });
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Apagar';
+                deleteBtn.style.background = '#e74c3c';
+                deleteBtn.style.color = '#fff';
+                deleteBtn.addEventListener('click', () => {
+                    if (!confirm('Apagar esta anotação?')) return;
+                    exercises[idx].annotations = '';
+                    exercises[idx].updatedAt = new Date().toISOString();
+                    localStorage.setItem('exercises', JSON.stringify(exercises));
+                    displayAllAnnotations();
+                    showExercises();
+                });
+
+                controls.appendChild(openBtn);
+                controls.appendChild(deleteBtn);
+
+                entry.appendChild(title);
+                entry.appendChild(meta);
+                entry.appendChild(text);
+                entry.appendChild(controls);
+
+                allAnnotationsList.appendChild(entry);
+            });
+        }
+
         function toggleMenu(index) {
             const menu = document.getElementById(`menu-${index}`);
             const menuBtn = menu.previousElementSibling;
@@ -3370,9 +3479,8 @@
             }
         }
 
-        function toggleFavorite(index) {
+        function toggleFavorite(index, el) {
             exercises[index].favorite = !exercises[index].favorite;
-            localStorage.setItem('exercises', JSON.stringify(exercises));
             if (isRandomMode) {
                 displayRandomExercise();
             } else {
@@ -3380,7 +3488,7 @@
             }
         }
 
-        function toggleDone(index) {
+        function toggleDone(index, el) {
             // Cycle through states: not-done -> in-progress -> done -> not-done
             const currentStatus = exercises[index].status || 'not-done';
             let newStatus = 'not-done';
@@ -3395,11 +3503,38 @@
             // Keep done for backwards compatibility with stats
             exercises[index].done = (newStatus === 'done');
             exercises[index].updatedAt = new Date().toISOString();
-            localStorage.setItem('exercises', JSON.stringify(exercises));
             if (isRandomMode) {
                 displayRandomExercise();
             } else {
                 displayExercises();
+            }
+        }
+
+        // Update a single exercise card in-place to avoid re-render delays
+        function updateCard(index) {
+            const card = document.querySelector(`div[data-index="${index}"]`);
+            if (!card) return;
+            const exercise = exercises[index];
+            // Update favorite button
+            const favBtn = card.querySelector('.favorite-btn');
+            if (favBtn) favBtn.textContent = exercise.favorite ? '★' : '☆';
+            // Update done/status button
+            const doneBtn = card.querySelector('.feito-btn');
+            if (doneBtn) {
+                doneBtn.classList.remove('not-done', 'in-progress', 'done');
+                const status = exercise.status || 'not-done';
+                doneBtn.classList.add(status);
+                doneBtn.textContent = status === 'done' ? '✓ Feito' : status === 'in-progress' ? '⊙ Incompleto' : 'Não Feito';
+                doneBtn.title = status === 'done' ? 'Concluído' : status === 'in-progress' ? 'Em Progresso' : 'Não Feito';
+            }
+            // Update annotation indicator
+            const annBtn = card.querySelector('.annotation-btn');
+            if (annBtn) {
+                if (exercise.annotations && exercise.annotations.toString().trim()) {
+                    annBtn.classList.add('has-annotations');
+                } else {
+                    annBtn.classList.remove('has-annotations');
+                }
             }
         }
 
@@ -3726,6 +3861,9 @@
                 alert('Título, dificuldade e categoria são obrigatórios.');
                 return;
             }
+
+            // Close edit modal immediately to improve UX (saving continues in background)
+            closeModalWindow(editModal);
 
             let imageData = exercises[editingIndex].image;
             let answerImageData = exercises[editingIndex].answerImage;
@@ -4081,7 +4219,3 @@
     </script>
 </body>
 </html>
-
-
-
-
