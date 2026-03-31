@@ -1554,14 +1554,24 @@
                         })
                     });
 
+                    const data = await response.json();
+                    
+                    console.log('📥 Resposta do Dropbox (completa):', data);
+                    console.log('  - status:', response.status);
+                    console.log('  - ok:', response.ok);
+                    
                     if (!response.ok) {
-                        const error = await response.json();
-                        console.error('❌ Erro na resposta do Dropbox:', error);
-                        alert('❌ Erro na autenticação: ' + (error.error_description || error.error));
+                        console.error('❌ Erro na resposta do Dropbox:', data);
+                        alert('❌ Erro na autenticação: ' + (data.error_description || data.error || JSON.stringify(data)));
                         return false;
                     }
 
-                    const data = await response.json();
+                    if (!data.access_token || !data.refresh_token) {
+                        console.error('❌ Tokens não encontrados na resposta:', data);
+                        alert('❌ Erro: Dropbox não retornou os tokens esperados.');
+                        return false;
+                    }
+
                     console.log('✅ Token recebido do Dropbox');
                     console.log('  - access_token:', data.access_token ? 'presente' : 'não encontrado');
                     console.log('  - refresh_token:', data.refresh_token ? 'presente' : 'não encontrado');
@@ -1573,8 +1583,8 @@
                     alert('✅ Conectado ao Dropbox com sucesso! Seu token não vai expirar.');
                     return true;
                 } catch (error) {
-                    console.error('Erro ao trocar código:', error);
-                    alert('❌ Erro ao conectar. Tente novamente.');
+                    console.error('❌ Erro ao trocar código:', error);
+                    alert('❌ Erro ao conectar: ' + error.message);
                     return false;
                 }
             }
@@ -1626,6 +1636,11 @@
             }
 
             setTokens(data) {
+                if (!data.access_token || !data.refresh_token) {
+                    console.error('❌ setTokens: tokens inválidos', data);
+                    throw new Error('Access token ou refresh token não foram retornados pelo Dropbox');
+                }
+
                 this.accessToken = data.access_token;
                 this.refreshToken = data.refresh_token;
                 const expiresIn = data.expires_in || 3600;
