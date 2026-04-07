@@ -1059,6 +1059,8 @@
       <button class="category-btn" data-category="Macroeconomia">Macroeconomia</button>
       <button class="category-btn" data-category="Estatística">Estatística</button>
       <br><br>
+      <button class="tag-btn" data-tag="#Today">#Today</button>
+      <br><br>
       <button class="stats-btn" id="statsBtn">Stats</button>
       <br><br>
       <button class="simulado-btn" id="simuladoBtn">Simulado</button>
@@ -2203,9 +2205,26 @@
                 }
             });
         });
+        document.querySelectorAll('.tag-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('statsBtn').classList.remove('active');
+                searchTerm = btn.dataset.tag;
+                currentPage = 1;
+                if (isRandomMode) {
+                    startRandomMode();
+                } else {
+                    showExercises();
+                }
+            });
+        });
 
         searchInput.addEventListener('input', () => {
             searchTerm = searchInput.value.trim().toLowerCase();
+            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
             currentPage = 1;
             showExercises();
         });
@@ -2224,6 +2243,7 @@
 
         statsBtn.addEventListener('click', () => {
             document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
             showStats();
         });
 
@@ -4022,7 +4042,7 @@
             modalOverlay.classList.remove('active');
         });
 
-        document.querySelectorAll('.category-btn, .stats-btn, .simulado-btn, #tagsBtn, #exportBtn, #importBtn, #storageBtn').forEach(btn => {
+        document.querySelectorAll('.category-btn, .tag-btn, .stats-btn, .simulado-btn, #tagsBtn, #exportBtn, #importBtn, #storageBtn').forEach(btn => {
             btn.addEventListener('click', () => {
                 leftSidebar.classList.remove('active');
                 modalOverlay.classList.remove('active');
@@ -4219,3 +4239,6 @@
     </script>
 </body>
 </html>
+
+
+
