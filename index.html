@@ -1886,6 +1886,16 @@
             }
         }
         
+        // Save reminder system
+        let saveReminderTimer;
+        
+        function startSaveReminder() {
+            clearTimeout(saveReminderTimer);
+            saveReminderTimer = setTimeout(() => {
+                alert('Já faz um tempo que você não salva. Melhor sincronizar!');
+            }, 10 * 60 * 1000); // 10 minutes
+        }
+        
         let exercises = [];
         let stats = {};
         let timers = {};
@@ -2414,6 +2424,7 @@
                     await saveToStorage('timers', timers);
                     await saveToStorage('simuladoHistory', simuladoHistory);
                     console.log('✅ Sincronização completa: dados salvos em IndexedDB/localStorage como cache');
+                    startSaveReminder();
                 }
             } finally {
                 isSyncing = false;
@@ -2919,6 +2930,7 @@
                 displayExercises();
                 
                 console.log('Exercício salvo:', title);
+                startSaveReminder();
             } catch (error) {
                 console.error('Erro ao salvar exercício:', error);
                 alert('Erro ao salvar exercício. Verifique o console.');
@@ -3604,6 +3616,7 @@
             } else {
                 displayExercises();
             }
+            startSaveReminder();
         }
 
         // Update a single exercise card in-place to avoid re-render delays
@@ -3858,6 +3871,7 @@
                 displayExercises();
             }
             closeModalWindow(modal);
+            startSaveReminder();
         };
 
         closeStatsModal.onclick = function() {
@@ -4018,6 +4032,7 @@
                 displayExercises();
             }
             closeModalWindow(editModal);
+            startSaveReminder();
         };
 
         function editExercise(index) {
@@ -4316,6 +4331,3 @@
     </script>
 </body>
 </html>
-
-
-
