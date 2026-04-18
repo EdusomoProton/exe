@@ -350,63 +350,111 @@
             background-color: rgba(0,0,0,0.4);
         }
         .modal-content {
-            background-color: #fff;
+            background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
             color: #000;
-            padding: 20px;
-            border: 1px solid #ddd;
-            width: 80%;
-            max-width: 500px;
-            border-radius: 10px;
+            padding: 24px;
+            border: none;
+            width: 85%;
+            max-width: 520px;
+            border-radius: 16px;
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 101;
-            max-height: 80vh;
+            max-height: 88vh;
             overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
         }
+
+        .modal-content h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #1DA1F2;
+            font-size: 22px;
+            font-weight: 600;
+            border-bottom: 3px solid #1DA1F2;
+            padding-bottom: 10px;
+        }
+
         @media (max-width: 768px) {
             .modal-content {
-                width: 90%;
-                max-width: 100%;
+                width: 95%;
+                padding: 20px;
+                max-width: calc(100% - 20px);
             }
         }
+
         .close {
             color: #aaa;
             float: right;
             font-size: 28px;
             font-weight: bold;
             cursor: pointer;
+            margin-top: -10px;
+            transition: color 0.2s;
         }
+
         .close:hover {
-            color: #000;
+            color: #1DA1F2;
         }
+
         .modal-content label {
             display: block;
-            margin-top: 10px;
-            color: #000;
+            margin-top: 12px;
+            color: #333;
+            font-weight: 500;
+            font-size: 13px;
         }
+
         .modal-content input, .modal-content textarea, .modal-content select {
             width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            padding: 10px 12px;
+            margin-top: 6px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
             background: #fff;
             color: #000;
             box-sizing: border-box;
+            font-size: 13px;
+            transition: all 0.3s ease;
         }
+
+        .modal-content input:focus, 
+        .modal-content textarea:focus, 
+        .modal-content select:focus {
+            outline: none;
+            border-color: #1DA1F2;
+            box-shadow: 0 0 0 3px rgba(29, 161, 242, 0.1);
+        }
+
+        .modal-content textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
         .modal-content button {
             margin-top: 10px;
-            padding: 10px 15px;
-            background: #1DA1F2;
+            padding: 11px 18px;
+            background: linear-gradient(135deg, #1DA1F2 0%, #1991DB 100%);
             color: #fff;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.3s ease;
         }
+
         .modal-content button:hover {
-            background: #1991DB;
+            background: linear-gradient(135deg, #1991DB 0%, #1570b8 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(29, 161, 242, 0.3);
+        }
+
+        .modal-content button:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 8px rgba(29, 161, 242, 0.2);
         }
         .alternative-input {
             display: flex;
@@ -428,6 +476,190 @@
             text-decoration: line-through;
             color: gray;
         }
+
+        /* Modern Upload Sections */
+        .upload-section {
+            margin: 15px 0;
+            padding: 14px;
+            border-radius: 12px;
+            border: 2px dashed #e0e0e0;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+        .upload-section:hover {
+            border-color: #1DA1F2;
+            background: #f0f7ff;
+        }
+
+        .upload-section.focused {
+            border-color: #1DA1F2;
+            background: #f0f7ff;
+            box-shadow: 0 0 0 3px rgba(29, 161, 242, 0.1);
+        }
+
+        /* Exercise Image Section - Blue/Purple Theme */
+        .upload-section.exercise-image {
+            border-color: #6366f1;
+            background: linear-gradient(135deg, #f0f4ff 0%, #f8f9fa 100%);
+        }
+
+        .upload-section.exercise-image:hover {
+            border-color: #4f46e5;
+            background: linear-gradient(135deg, #e8ecff 0%, #f0f7ff 100%);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+        }
+
+        .upload-section.exercise-image .section-title {
+            color: #4f46e5;
+        }
+
+        /* Answer/Solution Image Section - Green/Orange Theme */
+        .upload-section.answer-image {
+            border-color: #059669;
+            background: linear-gradient(135deg, #f0fdf4 0%, #f8f9fa 100%);
+        }
+
+        .upload-section.answer-image:hover {
+            border-color: #047857;
+            background: linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%);
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.15);
+        }
+
+        .upload-section.answer-image .section-title {
+            color: #059669;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 8px;
+        }
+
+        .section-icon {
+            font-size: 18px;
+        }
+
+        .section-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .section-subtitle {
+            font-size: 11px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .upload-area {
+            padding: 14px;
+            border: 2px dashed currentColor;
+            border-radius: 8px;
+            text-align: center;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 8px;
+        }
+
+        .upload-area:hover {
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .upload-area.exercise-image {
+            border-color: #6366f1;
+            color: #4f46e5;
+        }
+
+        .upload-area.answer-image {
+            border-color: #059669;
+            color: #059669;
+        }
+
+        .upload-area-text {
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .upload-area-hint {
+            font-size: 11px;
+            opacity: 0.7;
+        }
+
+        /* Image Preview Container */
+        .image-preview-container {
+            margin-top: 12px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .image-preview-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            background: #fff;
+        }
+
+        .image-preview-item:last-child {
+            border-bottom: none;
+        }
+
+        .image-preview-thumbnail {
+            width: 50px;
+            height: 50px;
+            border-radius: 6px;
+            object-fit: cover;
+            background: #f0f0f0;
+        }
+
+        .image-preview-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .image-preview-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: #333;
+            word-break: break-all;
+            margin-bottom: 4px;
+        }
+
+        .image-preview-size {
+            font-size: 11px;
+            color: #999;
+        }
+
+        .image-preview-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-remove {
+            background: #fee;
+            color: #dc3545;
+            font-weight: 500;
+        }
+
+        .btn-remove:hover {
+            background: #fdd;
+        }
+
         .multi-image-item {
             display: flex;
             align-items: center;
@@ -435,9 +667,11 @@
             border-bottom: 1px solid #eee;
             gap: 10px;
         }
+
         .multi-image-item:last-child {
             border-bottom: none;
         }
+
         .multi-image-thumbnail {
             width: 60px;
             height: 60px;
@@ -445,9 +679,11 @@
             border-radius: 5px;
             cursor: pointer;
         }
+
         .multi-image-info {
             flex: 1;
         }
+
         .multi-image-info input {
             width: 100%;
             padding: 5px;
@@ -455,6 +691,7 @@
             border-radius: 5px;
             font-size: 12px;
         }
+
         .multi-image-remove {
             background: #dc3545;
             color: #fff;
@@ -464,6 +701,7 @@
             cursor: pointer;
             font-size: 12px;
         }
+
         .multi-image-remove:hover {
             background: #c82333;
         }
@@ -505,7 +743,152 @@
         }
         .tag-selector {
             margin: 15px 0;
+            padding: 14px;
+            background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%);
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
         }
+
+        .tag-selector-label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .tag-search-section {
+            margin-bottom: 10px;
+        }
+
+        .tag-search-input {
+            width: 100%!important;
+            padding: 8px 12px!important;
+            border: 2px solid #e0e0e0!important;
+            border-radius: 8px!important;
+            font-size: 13px!important;
+            background: #fff!important;
+            transition: all 0.3s ease!important;
+        }
+
+        .tag-search-input:focus {
+            border-color: #1DA1F2!important;
+            box-shadow: 0 0 0 3px rgba(29, 161, 242, 0.1)!important;
+        }
+
+        .tag-search-info {
+            font-size: 11px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .existing-tags {
+            margin: 8px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .existing-tags button {
+            padding: 5px 10px!important;
+            background: #fff!important;
+            border: 1px solid #ddd!important;
+            border-radius: 20px!important;
+            cursor: pointer!important;
+            font-size: 12px!important;
+            transition: all 0.2s ease!important;
+        }
+
+        .existing-tags button:hover {
+            background: #f0f7ff!important;
+            border-color: #1DA1F2!important;
+            color: #1DA1F2!important;
+        }
+
+        .existing-tags button.selected {
+            background: #1DA1F2!important;
+            color: #fff!important;
+            border-color: #1DA1F2!important;
+        }
+
+        .new-tag-section {
+            margin: 8px 0;
+            padding-top: 8px;
+            border-top: 1px solid #ddd;
+        }
+
+        .new-tag-section-label {
+            display: block;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 6px;
+            font-size: 12px;
+        }
+
+        .new-tag-input {
+            width: 100%!important;
+            padding: 8px 12px!important;
+            border: 2px solid #e0e0e0!important;
+            border-radius: 8px!important;
+            font-size: 13px!important;
+        }
+
+        .new-tag-input:focus {
+            border-color: #1DA1F2!important;
+            box-shadow: 0 0 0 3px rgba(29, 161, 242, 0.1)!important;
+        }
+
+        .new-tag-hint {
+            font-size: 10px;
+            color: #999;
+            margin-top: 3px;
+        }
+
+        .selected-tags-display {
+            margin-top: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .selected-tags-display .tag-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            background: linear-gradient(135deg, #1DA1F2 0%, #1991DB 100%);
+            color: #fff;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .selected-tags-display .tag-item button {
+            background: rgba(255,255,255,0.3)!important;
+            border: none!important;
+            color: #fff!important;
+            padding: 1px 5px!important;
+            border-radius: 50%!important;
+            cursor: pointer!important;
+            font-size: 11px!important;
+            transition: all 0.2s ease!important;
+        }
+
+        .selected-tags-display .tag-item button:hover {
+            background: rgba(255,255,255,0.5)!important;
+        }
+
+        #editAddAlternative, #addAlternative {
+            background: #6366f1!important;
+            font-weight: 500;
+        }
+
+        #editAddAlternative:hover, #addAlternative:hover {
+            background: #4f46e5!important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3)!important;
+        }
+
         .tag-selector-label {
             display: block;
             font-weight: bold;
@@ -1159,15 +1542,15 @@
 <div id="editModal" class="modal">
   <div class="modal-content">
     <span class="close" id="closeEditModal">&times;</span>
-    <h2>Editar Exercício</h2>
+    <h2>✏️ Editar Exercício</h2>
     <label for="editTitle">Título do Exercício:</label>
-    <input type="text" id="editTitle">
+    <input type="text" id="editTitle" placeholder="Ex: Cálculo de Derivada">
 
     <label for="editDifficulty">Dificuldade:</label>
     <select id="editDifficulty">
-      <option value="easy">Fácil</option>
-      <option value="medium">Médio</option>
-      <option value="hard">Difícil</option>
+      <option value="easy">🟢 Fácil</option>
+      <option value="medium">🟠 Médio</option>
+      <option value="hard">🔴 Difícil</option>
     </select>
 
     <label for="editCategory">Categoria:</label>
@@ -1178,14 +1561,46 @@
       <option value="Estatística">Estatística</option>
     </select>
 
-    <label for="editImage">Upload da Foto (opcional):</label>
-    <input type="file" id="editImage" accept="image/*">
+    <!-- Exercise Image Section -->
+    <div class="upload-section exercise-image">
+      <div class="section-header">
+        <span class="section-icon">📋</span>
+        <div>
+          <h3 class="section-title" style="margin: 0;">Imagem do Exercício</h3>
+          <p class="section-subtitle">Foto ou captura do problema/questão</p>
+        </div>
+      </div>
+      <input type="file" id="editImage" accept="image/*" style="display:none;">
+      <div class="upload-area exercise-image" onclick="document.getElementById('editImage').click();">
+        <div class="upload-area-text">📷 Clique para alterar a fotografia</div>
+        <div class="upload-area-hint">Imagem única</div>
+      </div>
+      <div id="editImagePreview" style="display:none; margin-top: 12px;">
+        <div id="editImageList" class="image-preview-container"></div>
+      </div>
+    </div>
 
     <label for="editExerciseText">Texto do Exercício (opcional):</label>
-    <textarea id="editExerciseText" rows="5"></textarea>
+    <textarea id="editExerciseText" rows="5" placeholder="Descrição adicional do exercício..."></textarea>
 
-    <label for="editAnswerImage">Imagem da Resolução (opcional):</label>
-    <input type="file" id="editAnswerImage" accept="image/*">
+    <!-- Answer Image Section -->
+    <div class="upload-section answer-image">
+      <div class="section-header">
+        <span class="section-icon">✅</span>
+        <div>
+          <h3 class="section-title" style="margin: 0;">Imagem da Solução</h3>
+          <p class="section-subtitle">Foto ou captura da resolução/resposta</p>
+        </div>
+      </div>
+      <input type="file" id="editAnswerImage" accept="image/*" style="display:none;">
+      <div class="upload-area answer-image" onclick="document.getElementById('editAnswerImage').click();">
+        <div class="upload-area-text">✏️ Clique para alterar a resposta</div>
+        <div class="upload-area-hint">Imagem única</div>
+      </div>
+      <div id="editAnswerImagePreview" style="display:none; margin-top: 12px;">
+        <div id="editAnswerImageList" class="image-preview-container"></div>
+      </div>
+    </div>
 
     <div class="tag-selector">
       <label class="tag-selector-label">Etiquetas:</label>
@@ -1212,7 +1627,7 @@
       <option value="">Selecione</option>
     </select>
 
-    <button id="saveEdit">Salvar Edição</button>
+    <button id="saveEdit" style="width: 100%; padding: 11px; margin-top: 14px; font-size: 15px; font-weight: 600;">✅ Salvar Edição</button>
   </div>
 </div>
 
@@ -1220,17 +1635,18 @@
 <div id="newModal" class="modal">
   <div class="modal-content">
     <span class="close" id="closeNewModal">&times;</span>
-    <h2>Novo Exercício</h2>
+    <h2>✍️ Novo Exercício</h2>
     <form id="exerciseForm">
+      <!-- Basic Info Section -->
       <label for="title">Título do Exercício:</label>
-      <input type="text" id="title">
+      <input type="text" id="title" placeholder="Ex: Cálculo de Derivada">
 
       <label for="difficulty">Dificuldade:</label>
       <select id="difficulty" required>
         <option value="">Selecione</option>
-        <option value="easy">Fácil</option>
-        <option value="medium">Médio</option>
-        <option value="hard">Difícil</option>
+        <option value="easy">🟢 Fácil</option>
+        <option value="medium">🟠 Médio</option>
+        <option value="hard">🔴 Difícil</option>
       </select>
 
       <label for="category">Categoria:</label>
@@ -1242,20 +1658,47 @@
         <option value="Estatística">Estatística</option>
       </select>
 
-      <label for="image">Upload de Fotos (opcional - múltiplas imagens permitidas, ou cole com Ctrl+V):</label>
-      <input type="file" id="image" accept="image/*" multiple>
-      
-      <div id="multiImagePreview" style="display:none; margin-top: 15px;">
-        <h3>Imagens Selecionadas:</h3>
-        <div id="imagesList" style="border: 1px solid #ddd; border-radius: 8px; padding: 10px; max-height: 300px; overflow-y: auto;"></div>
-        <button type="button" id="clearImagesBtn" style="margin-top: 10px;">Limpar Imagens</button>
+      <!-- Exercise Image Section -->
+      <div class="upload-section exercise-image">
+        <div class="section-header">
+          <span class="section-icon">📋</span>
+          <div>
+            <h3 class="section-title" style="margin: 0;">Imagem do Exercício</h3>
+            <p class="section-subtitle">Foto ou captura do problema/questão</p>
+          </div>
+        </div>
+        <input type="file" id="image" accept="image/*" multiple style="display:none;">
+        <div class="upload-area exercise-image" onclick="document.getElementById('image').click();">
+          <div class="upload-area-text">📷 Clique ou arraste fotos do exercício</div>
+          <div class="upload-area-hint">Múltiplas imagens permitidas ou cole com Ctrl+V</div>
+        </div>
+        <div id="multiImagePreview" style="display:none; margin-top: 12px;">
+          <div id="imagesList" class="image-preview-container"></div>
+          <button type="button" id="clearImagesBtn" class="btn-small" style="width: 100%; margin-top: 6px; padding: 8px 12px; background: #fee; color: #dc3545; font-weight: 500; font-size: 12px;">✕ Limpar Imagens</button>
+        </div>
       </div>
 
       <label for="exerciseText">Texto do Exercício (opcional, use HTML para hyperlinks):</label>
-      <textarea id="exerciseText" rows="5"></textarea>
+      <textarea id="exerciseText" rows="5" placeholder="Descrição adicional do exercício..."></textarea>
 
-      <label for="answerImage">Imagem da Resposta (opcional):</label>
-      <input type="file" id="answerImage" accept="image/*">
+      <!-- Answer Image Section -->
+      <div class="upload-section answer-image">
+        <div class="section-header">
+          <span class="section-icon">✅</span>
+          <div>
+            <h3 class="section-title" style="margin: 0;">Imagem da Solução</h3>
+            <p class="section-subtitle">Foto ou captura da resolução/resposta</p>
+          </div>
+        </div>
+        <input type="file" id="answerImage" accept="image/*" style="display:none;">
+        <div class="upload-area answer-image" onclick="document.getElementById('answerImage').click();">
+          <div class="upload-area-text">✏️ Clique ou arraste a imagem da solução</div>
+          <div class="upload-area-hint">Uma única imagem</div>
+        </div>
+        <div id="answerImagePreview" style="display:none; margin-top: 12px;">
+          <div id="answerImageList" class="image-preview-container"></div>
+        </div>
+      </div>
 
       <div class="tag-selector">
         <label class="tag-selector-label">Etiquetas:</label>
@@ -1282,14 +1725,14 @@
         <option value="">Selecione</option>
       </select>
 
-      <button type="submit" id="submitBtn">Salvar Exercício(s)</button>
+      <button type="submit" id="submitBtn" style="width: 100%; padding: 11px; margin-top: 14px; font-size: 15px; font-weight: 600;">💾 Salvar Exercício(s)</button>
       
       <!-- Progress bar for multiple uploads -->
-      <div id="uploadProgress" style="display:none; margin-top: 15px;">
-        <div style="background: #f0f0f0; border-radius: 5px; overflow: hidden; height: 25px;">
-          <div id="progressBar" style="background: linear-gradient(90deg, #1DA1F2, #1991DB); height: 100%; width: 0%; transition: width 0.3s ease; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold;">0%</div>
+      <div id="uploadProgress" style="display:none; margin-top: 14px;">
+        <div style="background: #e8e8e8; border-radius: 8px; overflow: hidden; height: 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <div id="progressBar" style="background: linear-gradient(90deg, #059669 0%, #047857 100%); height: 100%; width: 0%; transition: width 0.3s ease; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: 600;">0%</div>
         </div>
-        <p id="uploadStatus" style="text-align: center; font-size: 14px; margin-top: 10px; color: #666;">Carregando...</p>
+        <p id="uploadStatus" style="text-align: center; font-size: 12px; margin-top: 8px; color: #666; font-weight: 500;">Carregando...</p>
       </div>
     </form>
   </div>
@@ -4331,3 +4774,6 @@
     </script>
 </body>
 </html>
+
+
+
