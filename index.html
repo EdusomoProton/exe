@@ -238,6 +238,20 @@
         .tweet-header .favorite-btn:hover {
             color: #ffed4e;
         }
+        .tweet-header .today-btn {
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            color: #1DA1F2;
+            margin-left: 10px;
+        }
+        .tweet-header .today-btn:hover {
+            color: #0d95e8;
+        }
+        .tweet-header .today-btn.active {
+            color: #ff6b35;
+        }
         .tweet-header .annotation-btn {
             background: none;
             border: 1px solid #ddd;
@@ -3482,6 +3496,7 @@
                         <span class="category">${exercise.category}</span>
                         <button class="annotation-btn ${exercise.annotations ? 'has-annotations' : ''}" onclick="openAnnotationModal(${index})">Anotações</button>
                         <button class="favorite-btn" onclick="toggleFavorite(${index})">${exercise.favorite ? '★' : '☆'}</button>
+                        <button class="today-btn ${exercise.tags && exercise.tags.includes('#Today') ? 'active' : ''}" onclick="toggleToday(${index})">📅 Hoje</button>
                     </div>
                     <div class="tweet-content">
                         <h4>${exercise.title}</h4>
@@ -4039,6 +4054,27 @@
             }
         }
 
+        function toggleToday(index) {
+            if (!exercises[index].tags) exercises[index].tags = [];
+            const hasToday = exercises[index].tags.includes('#Today');
+            if (hasToday) {
+                exercises[index].tags = exercises[index].tags.filter(tag => tag !== '#Today');
+                exercises[index].todayOrder = 0; // Reset order when removing
+            } else {
+                exercises[index].tags.push('#Today');
+                // Optionally set todayOrder to the end
+                const todayExercises = exercises.filter(ex => ex.tags && ex.tags.includes('#Today') && ex.status !== 'done');
+                exercises[index].todayOrder = todayExercises.length;
+            }
+            exercises[index].updatedAt = new Date().toISOString();
+            if (isRandomMode) {
+                displayRandomExercise();
+            } else {
+                displayExercises();
+            }
+            startSaveReminder();
+        }
+
         function toggleDone(index, el) {
             // Cycle through states: not-done -> in-progress -> done -> not-done
             const currentStatus = exercises[index].status || 'not-done';
@@ -4070,6 +4106,15 @@
             // Update favorite button
             const favBtn = card.querySelector('.favorite-btn');
             if (favBtn) favBtn.textContent = exercise.favorite ? '★' : '☆';
+            // Update today button
+            const todayBtn = card.querySelector('.today-btn');
+            if (todayBtn) {
+                if (exercise.tags && exercise.tags.includes('#Today')) {
+                    todayBtn.classList.add('active');
+                } else {
+                    todayBtn.classList.remove('active');
+                }
+            }
             // Update done/status button
             const doneBtn = card.querySelector('.feito-btn');
             if (doneBtn) {
@@ -4667,6 +4712,7 @@
                         <span class="category">${exercise.category}</span>
                         <button class="annotation-btn ${exercise.annotations ? 'has-annotations' : ''}" onclick="openAnnotationModal(${index})">Anotações</button>
                         <button class="favorite-btn" onclick="toggleFavorite(${index})">${exercise.favorite ? '★' : '☆'}</button>
+                        <button class="today-btn ${exercise.tags && exercise.tags.includes('#Today') ? 'active' : ''}" onclick="toggleToday(${index})">📅 Hoje</button>
                     </div>
                     <div class="tweet-content">
                         <h4>${exercise.title}</h4>
@@ -4774,6 +4820,3 @@
     </script>
 </body>
 </html>
-
-
-
