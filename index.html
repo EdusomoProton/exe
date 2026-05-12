@@ -3412,7 +3412,7 @@
                 if (currentCategory !== 'Todos' && exercise.category !== currentCategory) return;
                 const exerciseStatus = exercise.status || 'not-done';
                 if (currentStatus === 'done' && exerciseStatus !== 'done') return;
-                if (currentStatus === 'not-done' && exerciseStatus !== 'not-done') return;
+                if (currentStatus === 'not-done' && exerciseStatus !== 'not-done' && exerciseStatus !== 'in-progress') return;
                 if (currentStatus === 'in-progress' && exerciseStatus !== 'in-progress') return;
                 if (currentStatus === 'favorites' && !exercise.favorite) return;
                 if (searchTerm) {
