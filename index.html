@@ -4659,7 +4659,7 @@
                 if (currentCategory !== 'Todos' && exercise.category !== currentCategory) return false;
                 const exerciseStatus = exercise.status || 'not-done';
                 if (currentStatus === 'done' && exerciseStatus !== 'done') return false;
-                if (currentStatus === 'not-done' && exerciseStatus !== 'not-done') return false;
+                if (currentStatus === 'not-done' && exerciseStatus !== 'not-done' && exerciseStatus !== 'in-progress') return false;
                 if (currentStatus === 'in-progress' && exerciseStatus !== 'in-progress') return false;
                 if (currentStatus === 'favorites' && !exercise.favorite) return false;
                 return true;
